@@ -50,6 +50,14 @@ class int8{
     bool operator>=(const int8 &other) const { return value >= other.value; }
     bool operator<(const int8 &other) const { return value < other.value; }
     bool operator<=(const int8 &other) const { return value <= other.value; }
+
+    int8 operator<<(const int8 &other) const { return int8(value << other.value); }
+    int8 operator>>(const int8 &other) const { return int8(value >> other.value); }
+
+    int8 operator&(const int8 &other) const { return int8(value & other.value); }
+    int8 operator|(const int8 &other) const { return int8(value | other.value); }
+    int8 operator^(const int8 &other) const { return int8(value ^ other.value); }
+    int8 operator~() const { return int8(~value); }
 };
 
 
@@ -93,6 +101,14 @@ class int16{
     bool operator>=(const int16 &other) const { return value >= other.value; }
     bool operator<(const int16 &other) const { return value < other.value; }
     bool operator<=(const int16 &other) const { return value <= other.value; }
+
+    int16 operator<<(const int16 &other) const { return int16(value << other.value); }
+    int16 operator>>(const int16 &other) const { return int16(value >> other.value); }
+
+    int16 operator&(const int16 &other) const { return int16(value & other.value); }
+    int16 operator|(const int16 &other) const { return int16(value | other.value); }
+    int16 operator^(const int16 &other) const { return int16(value ^ other.value); }
+    int16 operator~() const { return int16(~value); }
 };
 
 
@@ -137,6 +153,14 @@ class int32{
     bool operator>=(const int32 &other) const { return value >= other.value; }
     bool operator<(const int32 &other) const { return value < other.value; }
     bool operator<=(const int32 &other) const { return value <= other.value; }
+
+    int32 operator<<(const int32 &other) const { return int32(value << other.value); }
+    int32 operator>>(const int32 &other) const { return int32(value >> other.value); }
+
+    int32 operator&(const int32 &other) const { return int32(value & other.value); }
+    int32 operator|(const int32 &other) const { return int32(value | other.value); }
+    int32 operator^(const int32 &other) const { return int32(value ^ other.value); }
+    int32 operator~() const { return int32(~value); }
 };
 
 
@@ -181,6 +205,14 @@ class int64{
     bool operator>=(const int64 &other) const { return value >= other.value; }
     bool operator<(const int64 &other) const { return value < other.value; }
     bool operator<=(const int64 &other) const { return value <= other.value; }
+
+    int64 operator<<(const int64 &other) const { return int64(value << other.value); }
+    int64 operator>>(const int64 &other) const { return int64(value >> other.value); }
+
+    int64 operator&(const int64 &other) const { return int64(value & other.value); }
+    int64 operator|(const int64 &other) const { return int64(value | other.value); }
+    int64 operator^(const int64 &other) const { return int64(value ^ other.value); }
+    int64 operator~() const { return int64(~value); }
 };
 
 
@@ -346,6 +378,11 @@ bool operator>(const int8 &x, const long &y){ return static_cast<long>(x.getValu
 bool operator>=(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) >= y; }
 bool operator<(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) < y; }
 bool operator<=(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) <= y; }
+int64 operator<<(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) << y); }
+int64 operator>>(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) >> y); }
+int64 operator&(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
+int64 operator|(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
+int64 operator^(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
 
 float64 operator+(const int8 &x, const double &y){ return float64(static_cast<double>(x.getValue()) + y); }
 float64 operator-(const int8 &x, const double &y){ return float64(static_cast<double>(x.getValue()) - y); }
@@ -422,6 +459,11 @@ bool operator>(const int8 &x, const int16 &y){ return static_cast<int16_t>(x.get
 bool operator>=(const int8 &x, const int16 &y){ return static_cast<int16_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int8 &x, const int16 &y){ return static_cast<int16_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int8 &x, const int16 &y){ return static_cast<int16_t>(x.getValue()) <= y.getValue(); }
+int16 operator<<(const int8 &x, const int16 &y){ return int16(static_cast<int16_t>(x.getValue()) << y.getValue()); }
+int16 operator>>(const int8 &x, const int16 &y){ return int16(static_cast<int16_t>(x.getValue()) >> y.getValue()); }
+int16 operator&(const int8 &x, const int16 &y){ return int16(static_cast<int16_t>(x.getValue()) & y.getValue()); }
+int16 operator^(const int8 &x, const int16 &y){ return int16(static_cast<int16_t>(x.getValue()) ^ y.getValue()); }
+int16 operator|(const int8 &x, const int16 &y){ return int16(static_cast<int16_t>(x.getValue()) | y.getValue()); }
 
 // function for int8 with int32
 int32 operator+(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) + y.getValue()); }
@@ -452,6 +494,11 @@ bool operator>(const int8 &x, const int32 &y){ return static_cast<int32_t>(x.get
 bool operator>=(const int8 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int8 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int8 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) <= y.getValue(); }
+int32 operator<<(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) << y.getValue()); }
+int32 operator>>(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) >> y.getValue()); }
+int32 operator&(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) & y.getValue()); }
+int32 operator^(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) ^ y.getValue()); }
+int32 operator|(const int8 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) | y.getValue()); }
 
 //function for int8 with int64
 int64 operator+(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) + y.getValue()); }
@@ -482,6 +529,11 @@ bool operator>(const int8 &x, const int64 &y){ return static_cast<int64_t>(x.get
 bool operator>=(const int8 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int8 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int8 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) <= y.getValue(); }
+int64 operator<<(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) << y.getValue()); }
+int64 operator>>(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) >> y.getValue()); }
+int64 operator&(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) & y.getValue()); }
+int64 operator^(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) ^ y.getValue()); }
+int64 operator|(const int8 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) | y.getValue()); }
 
 // functions for int8 with float32
 float32 operator+(const int8 &x, const float32 &y){ return float32(static_cast<float>(x.getValue()) + y.getValue()); }
@@ -571,6 +623,11 @@ bool operator>(const int16 &x, const long &y){ return static_cast<long>(x.getVal
 bool operator>=(const int16 &x, const long &y){ return static_cast<long>(x.getValue()) >= y; }
 bool operator<(const int16 &x, const long &y){ return static_cast<long>(x.getValue()) < y; }
 bool operator<=(const int16 &x, const long &y){ return static_cast<long>(x.getValue()) <= y; }
+int64 operator<<(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) << y); }
+int64 operator>>(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) >> y); }
+int64 operator&(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) & y); }
+int64 operator|(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) | y); }
+int64 operator^(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) ^ y); }
 
 float64 operator+(const int16 &x, const double &y){ return float64(static_cast<double>(x.getValue()) + y); }
 float64 operator-(const int16 &x, const double &y){ return float64(static_cast<double>(x.getValue()) - y); }
@@ -640,6 +697,11 @@ bool operator>(const int16 &x, const int8 &y){ return x.getValue() > static_cast
 bool operator>=(const int16 &x, const int8 &y){ return x.getValue() >= static_cast<int16_t>(y.getValue()); }
 bool operator<(const int16 &x, const int8 &y){ return x.getValue() < static_cast<int16_t>(y.getValue()); }
 bool operator<=(const int16 &x, const int8 &y){ return x.getValue() <= static_cast<int16_t>(y.getValue()); }
+int16 operator<<(const int16 &x, const int8 &y){ return int16(x.getValue() << static_cast<int16_t>(y.getValue())); }
+int16 operator>>(const int16 &x, const int8 &y){ return int16(x.getValue() >> static_cast<int16_t>(y.getValue())); }
+int16 operator&(const int16 &x, const int8 &y){ return int16(x.getValue() & static_cast<int16_t>(y.getValue())); }
+int16 operator|(const int16 &x, const int8 &y){ return int16(x.getValue() | static_cast<int16_t>(y.getValue())); }
+int16 operator^(const int16 &x, const int8 &y){ return int16(x.getValue() ^ static_cast<int16_t>(y.getValue())); }
 
 // functions for int16 with int32
 int32 operator+(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) + y.getValue()); }
@@ -669,6 +731,11 @@ bool operator>(const int16 &x, const int32 &y){ return static_cast<int32_t>(x.ge
 bool operator>=(const int16 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int16 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int16 &x, const int32 &y){ return static_cast<int32_t>(x.getValue()) <= y.getValue(); }
+int32 operator<<(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) << y.getValue()); }
+int32 operator>>(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) >> y.getValue()); }
+int32 operator&(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) & y.getValue()); }
+int32 operator|(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) | y.getValue()); }
+int32 operator^(const int16 &x, const int32 &y){ return int32(static_cast<int32_t>(x.getValue()) ^ y.getValue()); }
 
 // functions for int16 with int64
 int64 operator+(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) + y.getValue()); }
@@ -698,6 +765,11 @@ bool operator>(const int16 &x, const int64 &y){ return static_cast<int64_t>(x.ge
 bool operator>=(const int16 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int16 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int16 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) <= y.getValue(); }
+int64 operator<<(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) << y.getValue()); }
+int64 operator>>(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) >> y.getValue()); }
+int64 operator&(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) & y.getValue()); }
+int64 operator|(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) | y.getValue()); }
+int64 operator^(const int16 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) ^ y.getValue()); }
 
 // functions for int16 with float32
 float32 operator+(const int16 &x, const float32 &y){ return float32(static_cast<float>(x.getValue()) + y.getValue()); }
@@ -791,6 +863,11 @@ bool operator>(const int32 &x, const long &y){ return x.getValue() > static_cast
 bool operator>=(const int32 &x, const long &y){ return x.getValue() >= static_cast<long>(y); }
 bool operator<(const int32 &x, const long &y){ return x.getValue() < static_cast<long>(y); }
 bool operator<=(const int32 &x, const long &y){ return x.getValue() <= static_cast<long>(y); }
+int64 operator<<(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) << y); }
+int64 operator>>(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) >> y); }
+int64 operator&(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) & y); }
+int64 operator|(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) | y); }
+int64 operator^(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) ^ y); }
 
 float64 operator+(const int32 &x, const double &y){ return float64(static_cast<double>(x.getValue() + y)); }
 float64 operator-(const int32 &x, const double &y){ return float64(static_cast<double>(x.getValue() - y)); }
@@ -860,6 +937,11 @@ bool operator>(const int32 &x, const int8 &y){ return x.getValue() > static_cast
 bool operator>=(const int32 &x, const int8 &y){ return x.getValue() >= static_cast<int32_t>(y.getValue()); }
 bool operator<(const int32 &x, const int8 &y){ return x.getValue() < static_cast<int32_t>(y.getValue()); }
 bool operator<=(const int32 &x, const int8 &y){ return x.getValue() <= static_cast<int32_t>(y.getValue()); }
+int32 operator<<(const int32 &x, const int8 &y){ return int32(x.getValue() << static_cast<int32_t>(y.getValue())); }
+int32 operator>>(const int32 &x, const int8 &y){ return int32(x.getValue() >> static_cast<int32_t>(y.getValue())); }
+int32 operator&(const int32 &x, const int8 &y){ return int32(x.getValue() & static_cast<int32_t>(y.getValue())); }
+int32 operator|(const int32 &x, const int8 &y){ return int32(x.getValue() | static_cast<int32_t>(y.getValue())); }
+int32 operator^(const int32 &x, const int8 &y){ return int32(x.getValue() ^ static_cast<int32_t>(y.getValue())); }
 
 // functions for int32 with int16
 int32 operator+(const int32 &x, const int16 &y){ return int32(x.getValue() + static_cast<int32_t>(y.getValue())); }
@@ -889,6 +971,11 @@ bool operator>(const int32 &x, const int16 &y){ return x.getValue() > static_cas
 bool operator>=(const int32 &x, const int16 &y){ return x.getValue() >= static_cast<int32_t>(y.getValue()); }
 bool operator<(const int32 &x, const int16 &y){ return x.getValue() < static_cast<int32_t>(y.getValue()); }
 bool operator<=(const int32 &x, const int16 &y){ return x.getValue() <= static_cast<int32_t>(y.getValue()); }
+int32 operator<<(const int32 &x, const int16 &y){ return int32(x.getValue() << static_cast<int32_t>(y.getValue())); }
+int32 operator>>(const int32 &x, const int16 &y){ return int32(x.getValue() >> static_cast<int32_t>(y.getValue())); }
+int32 operator&(const int32 &x, const int16 &y){ return int32(x.getValue() & static_cast<int32_t>(y.getValue())); }
+int32 operator|(const int32 &x, const int16 &y){ return int32(x.getValue() | static_cast<int32_t>(y.getValue())); }
+int32 operator^(const int32 &x, const int16 &y){ return int32(x.getValue() ^ static_cast<int32_t>(y.getValue())); }
 
 // functions for int32 with int64
 int64 operator+(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) + y.getValue()); }
@@ -918,6 +1005,11 @@ bool operator>(const int32 &x, const int64 &y){ return static_cast<int64_t>(x.ge
 bool operator>=(const int32 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) >= y.getValue(); }
 bool operator<(const int32 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) < y.getValue(); }
 bool operator<=(const int32 &x, const int64 &y){ return static_cast<int64_t>(x.getValue()) <= y.getValue(); }
+int64 operator<<(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) << y.getValue()); }
+int64 operator>>(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) >> y.getValue()); }
+int64 operator&(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) & y.getValue()); }
+int64 operator|(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) | y.getValue()); }
+int64 operator^(const int32 &x, const int64 &y){ return int64(static_cast<int64_t>(x.getValue()) ^ y.getValue()); }
 
 // functions for int32 with float32
 float32 operator+(const int32 &x, const float32 &y){ return float32(static_cast<float>(x.getValue()) + y.getValue()); }
@@ -1005,6 +1097,11 @@ bool operator>(const int64 &x, const long &y){ return x.getValue() > y; }
 bool operator>=(const int64 &x, const long &y){ return x.getValue() >= y; }
 bool operator<(const int64 &x, const long &y){ return x.getValue() < y; }
 bool operator<=(const int64 &x, const long &y){ return x.getValue() <= y; }
+int64 operator<<(const int64 &x, const long &y){ return int64(x.getValue() << y); }
+int64 operator>>(const int64 &x, const long &y){ return int64(x.getValue() >> y); }
+int64 operator&(const int64 &x, const long &y){ return int64(x.getValue() & y); }
+int64 operator|(const int64 &x, const long &y){ return int64(x.getValue() | y); }
+int64 operator^(const int64 &x, const long &y){ return int64(x.getValue() ^ y); }
 
 float64 operator+(const int64 &x, const double &y){ return float64(static_cast<double>(x.getValue()) + y); }
 float64 operator-(const int64 &x, const double &y){ return float64(static_cast<double>(x.getValue()) - y); }
@@ -1065,12 +1162,17 @@ int64 power(const int64 &x, const int8 &y){
   for(int8_t i = 0; i < y.getValue(); ++i){ res *= x.getValue(); }
   return int64(res);
 }
-bool operator==(const int64 &x, const int8 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
-bool operator!=(const int64 &x, const int8 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
-bool operator>(const int64 &x, const int8 &y){ return x.getValue() > static_cast<double>(y.getValue()); }
-bool operator>=(const int64 &x, const int8 &y){ return x.getValue() >= static_cast<double>(y.getValue()); }
-bool operator<(const int64 &x, const int8 &y){ return x.getValue() < static_cast<double>(y.getValue()); }
-bool operator<=(const int64 &x, const int8 &y){ return x.getValue() <= static_cast<double>(y.getValue()); }
+bool operator==(const int64 &x, const int8 &y){ return x.getValue() == static_cast<int64_t>(y.getValue()); }
+bool operator!=(const int64 &x, const int8 &y){ return x.getValue() != static_cast<int64_t>(y.getValue()); }
+bool operator>(const int64 &x, const int8 &y){ return x.getValue() > static_cast<int64_t>(y.getValue()); }
+bool operator>=(const int64 &x, const int8 &y){ return x.getValue() >= static_cast<int64_t>(y.getValue()); }
+bool operator<(const int64 &x, const int8 &y){ return x.getValue() < static_cast<int64_t>(y.getValue()); }
+bool operator<=(const int64 &x, const int8 &y){ return x.getValue() <= static_cast<int64_t>(y.getValue()); }
+int64 operator<<(const int64 &x, const int8 &y){ return int64(x.getValue() << static_cast<int64_t>(y.getValue())); }
+int64 operator>>(const int64 &x, const int8 &y){ return int64(x.getValue() >> static_cast<int64_t>(y.getValue())); }
+int64 operator&(const int64 &x, const int8 &y){ return int64(x.getValue() & static_cast<int64_t>(y.getValue())); }
+int64 operator|(const int64 &x, const int8 &y){ return int64(x.getValue() | static_cast<int64_t>(y.getValue())); }
+int64 operator^(const int64 &x, const int8 &y){ return int64(x.getValue() ^ static_cast<int64_t>(y.getValue())); }
 
 // functions for int64 with int16
 int64 operator+(const int64 &x, const int16 &y){ return int64(x.getValue() + static_cast<int64_t>(y.getValue())); }
@@ -1091,12 +1193,17 @@ int64 power(const int64 &x, const int16 &y){
   for(int16_t i = 0; i < y.getValue(); ++i){ res *= x.getValue(); }
   return int64(res);
 }
-bool operator==(const int64 &x, const int16 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
-bool operator!=(const int64 &x, const int16 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
-bool operator>(const int64 &x, const int16 &y){ return x.getValue() > static_cast<double>(y.getValue()); }
-bool operator>=(const int64 &x, const int16 &y){ return x.getValue() >= static_cast<double>(y.getValue()); }
-bool operator<(const int64 &x, const int16 &y){ return x.getValue() < static_cast<double>(y.getValue()); }
-bool operator<=(const int64 &x, const int16 &y){ return x.getValue() <= static_cast<double>(y.getValue()); }
+bool operator==(const int64 &x, const int16 &y){ return x.getValue() == static_cast<int64_t>(y.getValue()); }
+bool operator!=(const int64 &x, const int16 &y){ return x.getValue() != static_cast<int64_t>(y.getValue()); }
+bool operator>(const int64 &x, const int16 &y){ return x.getValue() > static_cast<int64_t>(y.getValue()); }
+bool operator>=(const int64 &x, const int16 &y){ return x.getValue() >= static_cast<int64_t>(y.getValue()); }
+bool operator<(const int64 &x, const int16 &y){ return x.getValue() < static_cast<int64_t>(y.getValue()); }
+bool operator<=(const int64 &x, const int16 &y){ return x.getValue() <= static_cast<int64_t>(y.getValue()); }
+int64 operator<<(const int64 &x, const int16 &y){ return int64(x.getValue() << static_cast<int64_t>(y.getValue())); }
+int64 operator>>(const int64 &x, const int16 &y){ return int64(x.getValue() >> static_cast<int64_t>(y.getValue())); }
+int64 operator&(const int64 &x, const int16 &y){ return int64(x.getValue() & static_cast<int64_t>(y.getValue())); }
+int64 operator|(const int64 &x, const int16 &y){ return int64(x.getValue() | static_cast<int64_t>(y.getValue())); }
+int64 operator^(const int64 &x, const int16 &y){ return int64(x.getValue() ^ static_cast<int64_t>(y.getValue())); }
 
 // functions for int64 with int32
 int64 operator+(const int64 &x, const int32 &y){ return int64(x.getValue() + static_cast<int64_t>(y.getValue())); }
@@ -1117,12 +1224,17 @@ int64 power(const int64 &x, const int32 &y){
   for(int32_t i = 0; i < y.getValue(); ++i){ res *= x.getValue(); }
   return int64(res);
 }
-bool operator==(const int64 &x, const int32 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
-bool operator!=(const int64 &x, const int32 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
-bool operator>(const int64 &x, const int32 &y){ return x.getValue() > static_cast<double>(y.getValue()); }
-bool operator>=(const int64 &x, const int32 &y){ return x.getValue() >= static_cast<double>(y.getValue()); }
-bool operator<(const int64 &x, const int32 &y){ return x.getValue() < static_cast<double>(y.getValue()); }
-bool operator<=(const int64 &x, const int32 &y){ return x.getValue() <= static_cast<double>(y.getValue()); }
+bool operator==(const int64 &x, const int32 &y){ return x.getValue() == static_cast<int64_t>(y.getValue()); }
+bool operator!=(const int64 &x, const int32 &y){ return x.getValue() != static_cast<int64_t>(y.getValue()); }
+bool operator>(const int64 &x, const int32 &y){ return x.getValue() > static_cast<int64_t>(y.getValue()); }
+bool operator>=(const int64 &x, const int32 &y){ return x.getValue() >= static_cast<int64_t>(y.getValue()); }
+bool operator<(const int64 &x, const int32 &y){ return x.getValue() < static_cast<int64_t>(y.getValue()); }
+bool operator<=(const int64 &x, const int32 &y){ return x.getValue() <= static_cast<int64_t>(y.getValue()); }
+int64 operator<<(const int64 &x, const int32 &y){ return int64(x.getValue() << static_cast<int64_t>(y.getValue())); }
+int64 operator>>(const int64 &x, const int32 &y){ return int64(x.getValue() >> static_cast<int64_t>(y.getValue())); }
+int64 operator&(const int64 &x, const int32 &y){ return int64(x.getValue() & static_cast<int64_t>(y.getValue())); }
+int64 operator|(const int64 &x, const int32 &y){ return int64(x.getValue() | static_cast<int64_t>(y.getValue())); }
+int64 operator^(const int64 &x, const int32 &y){ return int64(x.getValue() ^ static_cast<int64_t>(y.getValue())); }
 
 // functions for int64 with float32
 float64 operator+(const int64 &x, const float32 &y){ return float64(static_cast<double>(x.getValue()) + static_cast<double>(y.getValue())); }
@@ -1793,7 +1905,34 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const int8&, const int32&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int8&, const int64&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int8&, const float32&>(&operator>=))
-    .def("__ge__", pybind11::overload_cast<const int8&, const float64&>(&operator>=));
+    .def("__ge__", pybind11::overload_cast<const int8&, const float64&>(&operator>=))
+    .def("__lshift__", &int8::operator<<)
+    .def("__lshift__", pybind11::overload_cast<const int8&, const long&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int8&, const int16&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int8&, const int32&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int8&, const int32&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int8&, const int64&>(&operator<<))
+    .def("__rshift__", &int8::operator>>)
+    .def("__rshift__", pybind11::overload_cast<const int8&, const long&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int8&, const int16&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int8&, const int32&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int8&, const int64&>(&operator>>))
+    .def("__and__", &int8::operator&)
+    .def("__and__", pybind11::overload_cast<const int8&, const long&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int8&, const int16&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int8&, const int32&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int8&, const int64&>(&operator&))
+    .def("__or__", &int8::operator|)
+    .def("__or__", pybind11::overload_cast<const int8&, const long&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int8&, const int16&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int8&, const int32&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int8&, const int64&>(&operator|))
+    .def("__xor__", &int8::operator^)
+    .def("__xor__", pybind11::overload_cast<const int8&, const long&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int8&, const int16&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int8&, const int32&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int8&, const int64&>(&operator^))
+    .def("__invert__", &int8::operator~);
 
   pybind11::class_<int16>(m, "int16")
     .def(pybind11::init<int16_t>())
@@ -1920,7 +2059,33 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const int16&, const int32&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int16&, const int64&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int16&, const float32&>(&operator>=))
-    .def("__ge__", pybind11::overload_cast<const int16&, const float64&>(&operator>=));
+    .def("__ge__", pybind11::overload_cast<const int16&, const float64&>(&operator>=))
+    .def("__lshift__", &int16::operator<<)
+    .def("__lshift__", pybind11::overload_cast<const int16&, const long&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int16&, const int8&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int16&, const int32&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int16&, const int64&>(&operator<<))
+    .def("__rshift__", &int16::operator<<)
+    .def("__rshift__", pybind11::overload_cast<const int16&, const long&>(&operator<<))
+    .def("__rshift__", pybind11::overload_cast<const int16&, const int8&>(&operator<<))
+    .def("__rshift__", pybind11::overload_cast<const int16&, const int32&>(&operator<<))
+    .def("__rshift__", pybind11::overload_cast<const int16&, const int64&>(&operator<<))
+    .def("__and__", &int16::operator&)
+    .def("__and__", pybind11::overload_cast<const int16&, const long&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int16&, const int8&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int16&, const int32&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int16&, const int64&>(&operator&))
+    .def("__or__", &int16::operator|)
+    .def("__or__", pybind11::overload_cast<const int16&, const long&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int16&, const int8&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int16&, const int32&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int16&, const int64&>(&operator|))
+    .def("__xor__", &int16::operator^)
+    .def("__xor__", pybind11::overload_cast<const int16&, const long&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int16&, const int8&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int16&, const int32&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int16&, const int64&>(&operator^))
+    .def("__invert__", &int16::operator~);
 
   pybind11::class_<int32>(m, "int32")
     .def(pybind11::init<int32_t>())
@@ -2047,7 +2212,33 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const int32&, const int16&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int32&, const int64&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int32&, const float32&>(&operator>=))
-    .def("__ge__", pybind11::overload_cast<const int32&, const float64&>(&operator>=));
+    .def("__ge__", pybind11::overload_cast<const int32&, const float64&>(&operator>=))
+    .def("__lshift__", &int32::operator<<)
+    .def("__lshift__", pybind11::overload_cast<const int32&, const long&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int32&, const int8&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int32&, const int16&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int32&, const int64&>(&operator<<))
+    .def("__rshift__", &int32::operator>>)
+    .def("__rshift__", pybind11::overload_cast<const int32&, const long&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int32&, const int8&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int32&, const int16&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int32&, const int64&>(&operator>>))
+    .def("__and__", &int32::operator&)
+    .def("__and__", pybind11::overload_cast<const int32&, const long&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int32&, const int8&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int32&, const int16&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int32&, const int64&>(&operator&))
+    .def("__or__", &int32::operator|)
+    .def("__or__", pybind11::overload_cast<const int32&, const long&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int32&, const int8&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int32&, const int16&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int32&, const int64&>(&operator|))
+    .def("__xor__", &int32::operator^)
+    .def("__xor__", pybind11::overload_cast<const int32&, const long&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int32&, const int8&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int32&, const int16&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int32&, const int64&>(&operator^))
+    .def("__invert__", &int32::operator~);
 
   pybind11::class_<int64>(m, "int64")
     .def(pybind11::init<int64_t>())
@@ -2174,7 +2365,33 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const int64&, const int16&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int64&, const int32&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const int64&, const float32&>(&operator>=))
-    .def("__ge__", pybind11::overload_cast<const int64&, const float64&>(&operator>=));
+    .def("__ge__", pybind11::overload_cast<const int64&, const float64&>(&operator>=))
+    .def("__lshift__", &int64::operator<<)
+    .def("__lshift__", pybind11::overload_cast<const int64&, const long&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int64&, const int8&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int64&, const int16&>(&operator<<))
+    .def("__lshift__", pybind11::overload_cast<const int64&, const int32&>(&operator<<))
+    .def("__rshift__", &int64::operator>>)
+    .def("__rshift__", pybind11::overload_cast<const int64&, const long&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int64&, const int8&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int64&, const int16&>(&operator>>))
+    .def("__rshift__", pybind11::overload_cast<const int64&, const int32&>(&operator>>))
+    .def("__and__", &int64::operator&)
+    .def("__and__", pybind11::overload_cast<const int64&, const long&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int64&, const int8&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int64&, const int16&>(&operator&))
+    .def("__and__", pybind11::overload_cast<const int64&, const int32&>(&operator&))
+    .def("__or__", &int64::operator|)
+    .def("__or__", pybind11::overload_cast<const int64&, const long&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int64&, const int8&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int64&, const int16&>(&operator|))
+    .def("__or__", pybind11::overload_cast<const int64&, const int32&>(&operator|))
+    .def("__xor__", &int64::operator^)
+    .def("__xor__", pybind11::overload_cast<const int64&, const long&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int64&, const int8&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int64&, const int16&>(&operator^))
+    .def("__xor__", pybind11::overload_cast<const int64&, const int32&>(&operator^))
+    .def("__invert__", &int64::operator~);
 
   pybind11::class_<float32>(m, "float32")
     .def(pybind11::init<float>())
