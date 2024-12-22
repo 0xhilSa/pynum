@@ -3,10 +3,11 @@
   <source media="(prefers-color-scheme:light)" srcset="./docs/pynum.svg">
   <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
 </picture>
-
+  
 <h3><i><b>pynum: a small python library for 1D and 2D arrays with GPU supports</b></i></h3>
-
 </div>
+
+---
 
 ## To Do
 - ops between dtypes
