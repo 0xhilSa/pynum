@@ -6,7 +6,6 @@
 
 <h3><i><b>pynum: a small python library for 1D and 2D arrays with GPU supports</b></i></h3>
 
-
 </div>
 
 ## To Do
