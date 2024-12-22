@@ -1,6 +1,13 @@
-# PyNum (WIP)
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme:light)" srcset="./docs/pynum.svg">
+  <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
+</picture>
 
-***a small python library for 1D and 2D arrays with GPU supports***
+<h3>pynum: a small python library for 1D and 2D arrays with GPU supports</h3>
+
+
+</div>
 
 ## To Do
 - ops between dtypes
