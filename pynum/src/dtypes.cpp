@@ -308,7 +308,8 @@ class complex128{
       if(other.value == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
       return complex128(value / other.value); }
     complex128 conj() const { return complex128(std::conj(value)); }
-    double magnitude() const { return std::abs(value); }
+    float64 phase() const { return float64(std::arg(value)); }
+    float64 magnitude() const { return float64(std::abs(value)); }
     complex128 power(const complex128 &other) const { return complex128(std::pow(value,other.value)); }
 
     bool operator==(const complex128 &other) const { return value == other.value; }
@@ -2444,7 +2445,8 @@ PYBIND11_MODULE(dtypes, m){
     .def("value", &complex128::getValue)
     .def("conj", &complex128::conj)
     .def("magnitude", &complex128::magnitude)
-    .def("__add__", [](const complex128 &a, const complex128 &b) { return a + b; })
+    .def("phase", &complex128::phase)
+    .def("__add__", &complex128::operator+)
     .def("__add__", pybind11::overload_cast<const complex128&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const complex128&, const double&>(&operator+))
     .def("__add__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator+))
@@ -2454,7 +2456,7 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", pybind11::overload_cast<const complex128&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const complex128&, const float32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const complex128&, const float64&>(&operator+))
-    .def("__sub__", [](const complex128 &a, const complex128 &b) { return a - b; })
+    .def("__sub__", &complex128::operator-)
     .def("__sub__", pybind11::overload_cast<const complex128&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const complex128&, const double&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator-))
@@ -2464,7 +2466,7 @@ PYBIND11_MODULE(dtypes, m){
     .def("__sub__", pybind11::overload_cast<const complex128&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const complex128&, const float32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const complex128&, const float64&>(&operator-))
-    .def("__mul__", [](const complex128 &a, const complex128 &b) { return a * b; })
+    .def("__mul__", &complex128::operator*)
     .def("__mul__", pybind11::overload_cast<const complex128&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const complex128&, const double&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator*))
@@ -2474,7 +2476,7 @@ PYBIND11_MODULE(dtypes, m){
     .def("__mul__", pybind11::overload_cast<const complex128&, const int64&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const complex128&, const float32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const complex128&, const float64&>(&operator*))
-    .def("__truediv__", [](const complex128 &a, const complex128 &b) { return a / b; })
+    .def("__truediv__", &complex128::operator/)
     .def("__truediv__", pybind11::overload_cast<const complex128&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const complex128&, const double&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator/))
@@ -2494,7 +2496,7 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", pybind11::overload_cast<const complex128&, const int64&>(&power))
     .def("__pow__", pybind11::overload_cast<const complex128&, const float32&>(&power))
     .def("__pow__", pybind11::overload_cast<const complex128&, const float64&>(&power))
-    .def("__eq__", [](const complex128 &a, const complex128 &b) { return a == b; })
+    .def("__eq__", &complex128::operator==)
     .def("__eq__", pybind11::overload_cast<const complex128&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const complex128&, const double&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator==))
@@ -2504,7 +2506,7 @@ PYBIND11_MODULE(dtypes, m){
     .def("__eq__", pybind11::overload_cast<const complex128&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const complex128&, const float32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const complex128&, const float64&>(&operator==))
-    .def("__ne__", [](const complex128 &a, const complex128 &b) { return a != b; })
+    .def("__ne__", &complex128::operator!=)
     .def("__ne__", pybind11::overload_cast<const complex128&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const complex128&, const double&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator!=))
@@ -2512,4 +2514,6 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ne__", pybind11::overload_cast<const complex128&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const complex128&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const complex128&, const int64&>(&operator!=))
-    .def("__ne__", pybind11::overload_cast<const complex1
+    .def("__ne__", pybind11::overload_cast<const complex128&, const float32&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const float64&>(&operator!=));
+}
