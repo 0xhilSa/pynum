@@ -1,6 +1,6 @@
 <div align="center">
 <picture>
-  <source media="(prefers-color-scheme:light)" srcset="./docs/pynum.svg">
+  <source media="(prefers-color-scheme:light)" srcset="/docs/pynum.svg">
   <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
 </picture>
   
