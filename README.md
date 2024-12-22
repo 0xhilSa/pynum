@@ -4,7 +4,7 @@
   <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
 </picture>
   
-<h3><i><b>pynum: a small python library for 1D and 2D arrays with GPU supports</b></i></h3>
+<h3><i><b>a small python library for 1D and 2D arrays with GPU supports</b></i></h3>
 </div>
 
 ---
