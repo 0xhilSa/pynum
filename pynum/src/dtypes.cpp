@@ -1,4 +1,6 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/complex.h>
+#include <pybind11/stl.h>
 #include <cstdint>
 #include <stdexcept>
 #include <cmath>
@@ -190,7 +192,7 @@ class float32{
     explicit float32(float val) : value(val){}
     std::string repr() const {
       std::ostringstream oss;
-      oss << std::fixed << std::setprecision(7) << value;
+      oss << std::setprecision(7) << value;
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
@@ -237,7 +239,7 @@ class float64{
     explicit float64(double val) : value(val){}
     std::string repr() const {
       std::ostringstream oss;
-      oss << std::fixed << std::setprecision(15) << value;
+      oss << std::setprecision(15) << value;
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
@@ -284,37 +286,35 @@ class complex128{
     std::complex<double> value;
   
   public:
-    explicit complex128(double real, double imag) : value(real,imag){}
+    explicit complex128(const double &real, const double &imag) : value(real,imag){}
+    explicit complex128(const float64 &real, const float64 &imag) : value(real.getValue(),imag.getValue()){}
+    explicit complex128(const std::complex<double> &comp) : value(comp){}
+
     std::string repr() const {
       std::ostringstream oss;
-      oss << std::fixed << std::setprecision(15);
-      std::string sign = (value.imag() < 0) ? " - " : " + ";
-      if(value.imag() < 0){ oss << "(" + std::to_string(value.real()) + sign + std::to_string(std::abs(value.imag())) + "j)"; }
+      if(value.imag() < 0) oss << "(" << std::setprecision(15) << value.real() << "-" << -value.imag() << "j)";
+      else oss << "(" << std::setprecision(15) << value.real() << "+" << value.imag() << "j)";
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
     std::complex<double> getValue() const { return value; }
-    double real() const { return value.real(); }
-    double imag() const { return value.imag(); }
+    float64 real() const { return float64(value.real()); }
+    float64 imag() const { return float64(value.imag()); }
 
-    complex128 operator+(const complex128 &other) const { return complex128(value.real() + other.real(), value.imag() + value.imag()); }
-    complex128 operator-(const complex128 &other) const { return complex128(value.real() - other.real(), value.imag() - value.imag()); }
-    complex128 operator*(const complex128 &other) const { return complex128(value.real() * other.value.real() - value.imag() * other.value.imag(), value.real() * other.value.imag() + value.imag() * other.value.real()); }
+    complex128 operator+(const complex128 &other) const { return complex128(value + other.value); }
+    complex128 operator-(const complex128 &other) const { return complex128(value - other.value); }
+    complex128 operator*(const complex128 &other) const { return complex128(value * other.value); }
     complex128 operator/(const complex128 &other) const {
-      if(other.value == std::complex<double>(0.0,0.0)) throw std::runtime_error("ZeroDivisionError");
-      return complex128(value.real() + other.real(), value.imag() + value.imag());
-    }
+      if(other.value == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+      return complex128(value / other.value); }
+    complex128 conj() const { return complex128(std::conj(value)); }
+    double magnitude() const { return std::abs(value); }
+    complex128 power(const complex128 &other) const { return complex128(std::pow(value,other.value)); }
 
     bool operator==(const complex128 &other) const { return value == other.value; }
     bool operator!=(const complex128 &other) const { return value != other.value; }
-
-    complex128 conj() const { return complex128(value.real(),-value.imag()); }
-    double magnitude() const { return std::abs(value); }
-    complex128 power(const complex128 &other) const {
-      std::complex<double> result = std::pow(value,other.value);
-      return complex128(result.real(),result.imag());
-    }
 };
+
 
 
 // functions for int8 with builtin dtypes
@@ -373,6 +373,18 @@ bool operator>(const int8 &x, const double &y){ return static_cast<double>(x.get
 bool operator>=(const int8 &x, const double &y){ return static_cast<double>(x.getValue()) >= y; }
 bool operator<(const int8 &x, const double &y){ return static_cast<double>(x.getValue()) < y; }
 bool operator<=(const int8 &x, const double &y){ return static_cast<double>(x.getValue()) <= y; }
+
+complex128 operator+(const int8 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) + y.real(),y.imag()); }
+complex128 operator-(const int8 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) - y.real(),-y.imag()); }
+complex128 operator*(const int8 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) * y.real(),static_cast<double>(x.getValue()) * y.imag()); }
+complex128 operator/(const int8 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
+}
+complex128 power(const int8 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+bool operator==(const int8 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
+bool operator!=(const int8 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
+
 
 // function for int8 with int8
 float64 operator/(const int8 &x, const int8 &y){
@@ -518,6 +530,18 @@ bool operator>=(const int8 &x, const float64 &y){ return static_cast<double>(x.g
 bool operator<(const int8 &x, const float64 &y){ return static_cast<double>(x.getValue()) < y.getValue(); }
 bool operator<=(const int8 &x, const float64 &y){ return static_cast<double>(x.getValue()) <= y.getValue(); }
 
+// functions for int8 with complex128
+complex128 operator+(const int8 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const int8 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const int8 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) * y.getValue().real(),static_cast<double>(x.getValue()) * y.getValue().imag()); }
+complex128 operator/(const int8 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
+}
+complex128 power(const int8 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const int8 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
+bool operator!=(const int8 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
+
 // functions for int16 with builtin dtypes
 int64 operator+(const int16 &x, const long &y){ return int64(static_cast<long>(x.getValue()) + y); }
 int64 operator-(const int16 &x, const long &y){ return int64(static_cast<long>(x.getValue()) - y); }
@@ -569,6 +593,17 @@ bool operator>(const int16 &x, const double &y){ return static_cast<double>(x.ge
 bool operator>=(const int16 &x, const double &y){ return static_cast<double>(x.getValue()) >= y; }
 bool operator<(const int16 &x, const double &y){ return static_cast<double>(x.getValue()) < y; }
 bool operator<=(const int16 &x, const double &y){ return static_cast<double>(x.getValue()) <= y; }
+
+complex128 operator+(const int16 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) + y.real(),y.imag()); }
+complex128 operator-(const int16 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) - y.real(),-y.imag()); }
+complex128 operator*(const int16 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) * y.real(),static_cast<double>(x.getValue()) * y.imag()); }
+complex128 operator/(const int16 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
+}
+complex128 power(const int16 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+bool operator==(const int16 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
+bool operator!=(const int16 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
 // functions for int16 with int16
 float32 operator/(const int16 &x, const int16 &y){
@@ -717,6 +752,18 @@ bool operator>=(const int16 &x, const float64 &y){ return static_cast<double>(x.
 bool operator<(const int16 &x, const float64 &y){ return static_cast<double>(x.getValue()) < y.getValue(); }
 bool operator<=(const int16 &x, const float64 &y){ return static_cast<double>(x.getValue()) <= y.getValue(); }
 
+// functions for int16 with complex128
+complex128 operator+(const int16 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const int16 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const int16 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) * y.getValue().real(),static_cast<double>(x.getValue()) * y.getValue().imag()); }
+complex128 operator/(const int16 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
+}
+complex128 power(const int16 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const int16 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
+bool operator!=(const int16 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
+
 // functions for int32 with builtin dtypes
 int64 operator+(const int32 &x, const long &y){ return int64(static_cast<long>(x.getValue()) + y); }
 int64 operator-(const int32 &x, const long &y){ return int64(static_cast<long>(x.getValue()) - y); }
@@ -766,6 +813,17 @@ bool operator>(const int32 &x, const double &y){ return static_cast<double>(x.ge
 bool operator>=(const int32 &x, const double &y){ return static_cast<double>(x.getValue()) >= y; }
 bool operator<(const int32 &x, const double &y){ return static_cast<double>(x.getValue()) < y; }
 bool operator<=(const int32 &x, const double &y){ return static_cast<double>(x.getValue()) <= y; }
+
+complex128 operator+(const int32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) + y.real(),y.imag()); }
+complex128 operator-(const int32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) - y.real(),-y.imag()); }
+complex128 operator*(const int32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) * y.real(),static_cast<double>(x.getValue()) * y.imag()); }
+complex128 operator/(const int32 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
+}
+complex128 power(const int32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+bool operator==(const int32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
+bool operator!=(const int32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
 // functions for int32 with int32
 float32 operator/(const int32 &x, const int32 &y){
@@ -906,6 +964,18 @@ bool operator>=(const int32 &x, const float64 &y){ return static_cast<double>(x.
 bool operator<(const int32 &x, const float64 &y){ return static_cast<double>(x.getValue()) < y.getValue(); }
 bool operator<=(const int32 &x, const float64 &y){ return static_cast<double>(x.getValue()) <= y.getValue(); }
 
+// functions for int32 with complex128
+complex128 operator+(const int32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const int32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const int32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) * y.getValue().real(),static_cast<double>(x.getValue()) * y.getValue().imag()); }
+complex128 operator/(const int32 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
+}
+complex128 power(const int32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const int32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
+bool operator!=(const int32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
+
 // functions for int64 with builtin dtypes
 int64 operator+(const int64 &x, const long &y){ return int64(x.getValue() + y); }
 int64 operator-(const int64 &x, const long &y){ return int64(x.getValue() - y); }
@@ -957,6 +1027,17 @@ bool operator>(const int64 &x, const double &y){ return static_cast<double>(x.ge
 bool operator>=(const int64 &x, const double &y){ return static_cast<double>(x.getValue()) >= y; }
 bool operator<(const int64 &x, const double &y){ return static_cast<double>(x.getValue()) < y; }
 bool operator<=(const int64 &x, const double &y){ return static_cast<double>(x.getValue()) <= y; }
+
+complex128 operator+(const int64 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) + y.real(),y.imag()); }
+complex128 operator-(const int64 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) - y.real(),-y.imag()); }
+complex128 operator*(const int64 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) * y.real(),static_cast<double>(x.getValue()) * y.imag()); }
+complex128 operator/(const int64 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
+}
+complex128 power(const int64 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+bool operator==(const int64 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
+bool operator!=(const int64 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
 // functions for int64 with int64
 float64 operator/(const int64 &x, const int64 &y){
@@ -1090,6 +1171,18 @@ bool operator>=(const int64 &x, const float64 &y){ return static_cast<double>(x.
 bool operator<(const int64 &x, const float64 &y){ return static_cast<double>(x.getValue()) < static_cast<double>(y.getValue()); }
 bool operator<=(const int64 &x, const float64 &y){ return static_cast<double>(x.getValue()) <= static_cast<double>(y.getValue()); }
 
+// functions for int64 with complex128
+complex128 operator+(const int64 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const int64 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const int64 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) * y.getValue().real(),static_cast<double>(x.getValue()) * y.getValue().imag()); }
+complex128 operator/(const int64 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
+}
+complex128 power(const int64 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const int64 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
+bool operator!=(const int64 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
+
 // functions for float32 builtin dtypes
 float64 operator+(const float32 &x, const long &y){ return float64(static_cast<double>(x.getValue()) + static_cast<double>(y)); }
 float64 operator-(const float32 &x, const long &y){ return float64(static_cast<double>(x.getValue()) - static_cast<double>(y)); }
@@ -1136,6 +1229,17 @@ bool operator>(const float32 &x, const double &y){ return static_cast<double>(x.
 bool operator>=(const float32 &x, const double &y){ return static_cast<double>(x.getValue()) >= y; }
 bool operator<(const float32 &x, const double &y){ return static_cast<double>(x.getValue()) < y; }
 bool operator<=(const float32 &x, const double &y){ return static_cast<double>(x.getValue()) <= y; }
+
+complex128 operator+(const float32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) + y.real(),y.imag()); }
+complex128 operator-(const float32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) - y.real(),-y.imag()); }
+complex128 operator*(const float32 &x, const std::complex<double> &y){ return complex128(static_cast<double>(x.getValue()) * y.real(),static_cast<double>(x.getValue()) * y.imag()); }
+complex128 operator/(const float32 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
+}
+complex128 power(const float32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+bool operator==(const float32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
+bool operator!=(const float32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
 // functions for float32 with int8
 float32 operator+(const float32 &x, const int8 &y){ return float32(x.getValue() + static_cast<float>(y.getValue())); }
@@ -1257,6 +1361,17 @@ bool operator>=(const float32 &x, const float64 &y){ return static_cast<double>(
 bool operator<(const float32 &x, const float64 &y){ return static_cast<double>(x.getValue()) < y.getValue(); }
 bool operator<=(const float32 &x, const float64 &y){ return static_cast<double>(x.getValue()) <= y.getValue(); }
 
+// functions for float32 with complex128
+complex128 operator+(const float32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const float32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const float32 &x, const complex128 &y){ return complex128(static_cast<double>(x.getValue()) * y.getValue().real(),static_cast<double>(x.getValue()) * y.getValue().imag()); }
+complex128 operator/(const float32 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
+}
+complex128 power(const float32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const float32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
+bool operator!=(const float32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
 // functions for float64 with builtin dtypes
 float64 operator+(const float64 &x, const long &y){ return float64(x.getValue() + static_cast<double>(y)); }
@@ -1299,6 +1414,16 @@ bool operator>=(const float64 &x, const double &y){ return x.getValue() >= y; }
 bool operator<(const float64 &x, const double &y){ return x.getValue() < y; }
 bool operator<=(const float64 &x, const double &y){ return x.getValue() <= y; }
 
+complex128 operator+(const float64 &x, const std::complex<double> &y){ return complex128(x.getValue() + y.real(),y.imag()); }
+complex128 operator-(const float64 &x, const std::complex<double> &y){ return complex128(x.getValue() - y.real(),-y.imag()); }
+complex128 operator*(const float64 &x, const std::complex<double> &y){ return complex128(x.getValue() * y.real(),x.getValue() * y.imag()); }
+complex128 operator/(const float64 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.getValue() / y.real(),x.getValue() / y.imag());
+}
+complex128 power(const float64 &x, const std::complex<double> &y){ return complex128(std::pow(x.getValue(),y.real()),y.imag()); }
+bool operator==(const float64 &x, const std::complex<double> &y){ return x.getValue() == y.real(); }
+bool operator!=(const float64 &x, const std::complex<double> &y){ return x.getValue() != y.real(); }
 
 // functions for float64 with int8
 float64 operator+(const float64 &x, const int8 &y){ return float64(x.getValue() + static_cast<double>(y.getValue())); }
@@ -1420,18 +1545,124 @@ bool operator>=(const float64 &x, const float32 &y){ return x.getValue() >= stat
 bool operator<(const float64 &x, const float32 &y){ return x.getValue() < static_cast<double>(y.getValue()); }
 bool operator<=(const float64 &x, const float32 &y){ return x.getValue() <= static_cast<double>(y.getValue()); }
 
+// functions for float64 with complex128
+complex128 operator+(const float64 &x, const complex128 &y){ return complex128(x.getValue() + y.getValue().real(),y.getValue().imag()); }
+complex128 operator-(const float64 &x, const complex128 &y){ return complex128(x.getValue() - y.getValue().real(),-y.getValue().imag()); }
+complex128 operator*(const float64 &x, const complex128 &y){ return complex128(x.getValue() * y.getValue().real(),x.getValue() * y.getValue().imag()); }
+complex128 operator/(const float64 &x, const complex128 &y){
+  if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.getValue() / y.getValue().real(),x.getValue() / y.getValue().imag());
+}
+complex128 power(const float64 &x, const complex128 &y){ return complex128(std::pow(x.getValue(),y.getValue().real()),y.getValue().imag()); }
+bool operator==(const float64 &x, const complex128 &y){ return x.getValue() == y.getValue().real(); }
+bool operator!=(const float64 &x, const complex128 &y){ return x.getValue() != y.getValue().real(); }
+
 // functions for complex128 with builtin dtypes
-complex128 operator+(const complex128 &x, const long &y){ return complex128(x.real() + y,x.imag()); }
-complex128 operator-(const complex128 &x, const long &y){ return complex128(x.real() - y,x.imag()); }
-complex128 operator*(const complex128 &x, const long &y){ return complex128(x.real() * y,x.imag() * y); }
+complex128 operator+(const complex128 &x, const long &y){ return complex128(x.real() + static_cast<double>(y), x.imag()); }
+complex128 operator-(const complex128 &x, const long &y){ return complex128(x.real() - static_cast<double>(y), x.imag()); }
+complex128 operator*(const complex128 &x, const long &y){ return complex128(x.real() * static_cast<double>(y), x.imag() * static_cast<double>(y)); }
 complex128 operator/(const complex128 &x, const long &y){
-  if(y < 0) throw std::runtime_error("ZeroDivisionError");
+  if(y == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y), x.imag() / static_cast<double>(y));
+}
+complex128 power(const complex128 &x, const long &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y))); }
+bool operator==(const complex128 &x, const long &y){ return x.getValue() == static_cast<double>(y); }
+bool operator!=(const complex128 &x, const long &y){ return x.getValue() != static_cast<double>(y); }
+
+complex128 operator+(const complex128 &x, const double &y){ return complex128(x.real() + y, x.imag()); }
+complex128 operator-(const complex128 &x, const double &y){ return complex128(x.real() - y, x.imag()); }
+complex128 operator*(const complex128 &x, const double &y){ return complex128(x.real() * y, x.imag() * y); }
+complex128 operator/(const complex128 &x, const double &y){
+  if(y == 0) throw std::runtime_error("ZeroDivisionError");
   return complex128(x.real() / y, x.imag() / y);
 }
-complex128 power(const complex128 &x, const long &y){
-  std::complex<double> result = std::pow(x.getValue(),static_cast<double>(y));
-  return complex128(result.real(),result.imag());
+complex128 power(const complex128 &x, const double &y){ return complex128(std::pow(x.getValue(),y)); }
+bool operator==(const complex128 &x, const double &y){ return x.getValue() == y; }
+bool operator!=(const complex128 &x, const double &y){ return x.getValue() != y; }
+
+complex128 operator+(const complex128 &x, const std::complex<double> &y){ return complex128(x.real() + y.real(), x.imag() + y.imag()); }
+complex128 operator-(const complex128 &x, const std::complex<double> &y){ return complex128(x.real() - y.real(), x.imag() - y.imag()); }
+complex128 operator*(const complex128 &x, const std::complex<double> &y){ return complex128(x.real() * y.real() - x.imag() * y.imag(), x.real() * y.imag() + x.imag() * y.real()); }
+complex128 operator/(const complex128 &x, const std::complex<double> &y){
+  if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
+  return complex128((x.real() * y.real() + x.imag() * y.imag()) / (y.real() * y.real() + y.imag() * y.imag()), (x.imag() * y.real() - x.real() * y.imag()) / (y.real() * y.real() + y.imag() * y.imag()));
 }
+complex128 power(const complex128 &x, const std::complex<double> &y){ return complex128(std::pow(x.getValue(),y)); }
+bool operator==(const complex128 &x, const std::complex<double> &y){ return x.getValue() == y; }
+bool operator!=(const complex128 &x, const std::complex<double> &y){ return x.getValue() != y; }
+
+// functions for complex128 with int8
+complex128 operator+(const complex128 &x, const int8 &y){ return complex128(x.real() + static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator-(const complex128 &x, const int8 &y){ return complex128(x.real() - static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator*(const complex128 &x, const int8 &y){ return complex128(x.real() * static_cast<double>(y.getValue()), x.imag() * static_cast<double>(y.getValue())); }
+complex128 operator/(const complex128 &x, const int8 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y.getValue()), x.imag() / static_cast<double>(y.getValue()));
+}
+complex128 power(const complex128 &x, const int8 &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y.getValue()))); }
+bool operator==(const complex128 &x, const int8 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
+bool operator!=(const complex128 &x, const int8 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
+
+// functions for complex128 with int16
+complex128 operator+(const complex128 &x, const int16 &y){ return complex128(x.real() + static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator-(const complex128 &x, const int16 &y){ return complex128(x.real() - static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator*(const complex128 &x, const int16 &y){ return complex128(x.real() * static_cast<double>(y.getValue()), x.imag() * static_cast<double>(y.getValue())); }
+complex128 operator/(const complex128 &x, const int16 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y.getValue()), x.imag() / static_cast<double>(y.getValue()));
+}
+complex128 power(const complex128 &x, const int16 &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y.getValue()))); }
+bool operator==(const complex128 &x, const int16 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
+bool operator!=(const complex128 &x, const int16 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
+
+// functions for complex128 with int32
+complex128 operator+(const complex128 &x, const int32 &y){ return complex128(x.real() + static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator-(const complex128 &x, const int32 &y){ return complex128(x.real() - static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator*(const complex128 &x, const int32 &y){ return complex128(x.real() * static_cast<double>(y.getValue()), x.imag() * static_cast<double>(y.getValue())); }
+complex128 operator/(const complex128 &x, const int32 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y.getValue()), x.imag() / static_cast<double>(y.getValue()));
+}
+complex128 power(const complex128 &x, const int32 &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y.getValue()))); }
+bool operator==(const complex128 &x, const int32 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
+bool operator!=(const complex128 &x, const int32 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
+
+// functions for complex128 with int64
+complex128 operator+(const complex128 &x, const int64 &y){ return complex128(x.real() + static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator-(const complex128 &x, const int64 &y){ return complex128(x.real() - static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator*(const complex128 &x, const int64 &y){ return complex128(x.real() * static_cast<double>(y.getValue()), x.imag() * static_cast<double>(y.getValue())); }
+complex128 operator/(const complex128 &x, const int64 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y.getValue()), x.imag() / static_cast<double>(y.getValue()));
+}
+complex128 power(const complex128 &x, const int64 &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y.getValue()))); }
+bool operator==(const complex128 &x, const int64 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
+bool operator!=(const complex128 &x, const int64 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
+
+// functions for complex128 with float32
+complex128 operator+(const complex128 &x, const float32 &y){ return complex128(x.real() + static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator-(const complex128 &x, const float32 &y){ return complex128(x.real() - static_cast<double>(y.getValue()), x.imag()); }
+complex128 operator*(const complex128 &x, const float32 &y){ return complex128(x.real() * static_cast<double>(y.getValue()), x.imag() * static_cast<double>(y.getValue())); }
+complex128 operator/(const complex128 &x, const float32 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / static_cast<double>(y.getValue()), x.imag() / static_cast<double>(y.getValue()));
+}
+complex128 power(const complex128 &x, const float32 &y){ return complex128(std::pow(x.getValue(),static_cast<double>(y.getValue()))); }
+bool operator==(const complex128 &x, const float32 &y){ return x.getValue() == static_cast<double>(y.getValue()); }
+bool operator!=(const complex128 &x, const float32 &y){ return x.getValue() != static_cast<double>(y.getValue()); }
+
+// functions for complex128 with float64
+complex128 operator+(const complex128 &x, const float64 &y){ return complex128(x.real() + y.getValue(), x.imag()); }
+complex128 operator-(const complex128 &x, const float64 &y){ return complex128(x.real() - y.getValue(), x.imag()); }
+complex128 operator*(const complex128 &x, const float64 &y){ return complex128(x.real() * y.getValue(), x.imag() * y.getValue()); }
+complex128 operator/(const complex128 &x, const float64 &y){
+  if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
+  return complex128(x.real() / y.getValue(), x.imag() / y.getValue());
+}
+complex128 power(const complex128 &x, const float64 &y){ return complex128(std::pow(x.getValue(),y.getValue())); }
+bool operator==(const complex128 &x, const float64 &y){ return x.getValue() == y.getValue(); }
+bool operator!=(const complex128 &x, const float64 &y){ return x.getValue() != y.getValue(); }
+
 
 
 
@@ -1444,35 +1675,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &int8::operator+)
     .def("__add__", pybind11::overload_cast<const int8&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const int16&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const int32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const float32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int8&, const float64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int8&, const complex128&>(&operator+))
     .def("__sub__", &int8::operator-)
     .def("__sub__", pybind11::overload_cast<const int8&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const int16&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const int32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const float32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int8&, const float64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int8&, const complex128&>(&operator-))
     .def("__mul__", &int8::operator*)
     .def("__mul__", pybind11::overload_cast<const int8&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const int16&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const int32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const int64&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const float32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int8&, const float64&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int8&, const complex128&>(&operator*))
     .def("__truediv__", pybind11::overload_cast<const int8&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const int16&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const float32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int8&, const float64&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int8&, const complex128&>(&operator/))
     .def("__mod__", &int8::operator%)
     .def("__mod__", pybind11::overload_cast<const int8&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const int8&, const double&>(&operator%))
@@ -1492,30 +1731,36 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", &int8::power)
     .def("__pow__", pybind11::overload_cast<const int8&, const long&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const int16&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const int32&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const int64&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const float32&>(&power))
     .def("__pow__", pybind11::overload_cast<const int8&, const float64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int8&, const complex128&>(&power))
     .def("__abs__", &int8::abs)
     .def("__neg__", &int8::neg)
     .def("__pos__", &int8::pos)
     .def("__eq__", &int8::operator==)
     .def("__eq__", pybind11::overload_cast<const int8&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const int16&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const int32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const float32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int8&, const float64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int8&, const complex128&>(&operator==))
     .def("__ne__", &int8::operator!=)
     .def("__ne__", pybind11::overload_cast<const int8&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const double&>(&operator!=))
+    .def("__neq__", pybind11::overload_cast<const int8&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const int64&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const float32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int8&, const float64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int8&, const complex128&>(&operator!=))
     .def("__lt__", &int8::operator<)
     .def("__lt__",pybind11::overload_cast<const int8&, const long&>(&operator<))
     .def("__lt__",pybind11::overload_cast<const int8&, const double&>(&operator<))
@@ -1557,35 +1802,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &int16::operator+)
     .def("__add__", pybind11::overload_cast<const int16&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const int8&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const int32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const float32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int16&, const float64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int16&, const complex128&>(&operator+))
     .def("__sub__", &int16::operator-)
     .def("__sub__", pybind11::overload_cast<const int16&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const int8&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const int32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const float32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int16&, const float64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int16&, const complex128&>(&operator-))
     .def("__mul__", &int16::operator*)
     .def("__mul__", pybind11::overload_cast<const int16&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int16&, const int8&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int16&, const complex128&>(&operator*))
     .def("__truediv__", pybind11::overload_cast<const int16&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const float32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int16&, const float64&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int16&, const complex128&>(&operator/))
     .def("__mod__", &int16::operator%)
     .def("__mod__", pybind11::overload_cast<const int16&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const int16&, const double&>(&operator%))
@@ -1605,30 +1858,36 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", &int16::power)
     .def("__pow__", pybind11::overload_cast<const int16&, const long&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const int8&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const int32&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const int64&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const float64&>(&power))
     .def("__pow__", pybind11::overload_cast<const int16&, const float32&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int16&, const complex128&>(&power))
     .def("__abs__", &int16::abs)
     .def("__neg__", &int16::neg)
     .def("__pos__", &int16::pos)
     .def("__eq__", &int16::operator==)
     .def("__eq__", pybind11::overload_cast<const int16&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const int8&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const int32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const float32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int16&, const float64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int16&, const complex128&>(&operator==))
     .def("__ne__", &int16::operator!=)
     .def("__ne__", pybind11::overload_cast<const int16&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int16&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const int8&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const int64&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const float32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int16&, const float64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int16&, const complex128&>(&operator!=))
     .def("__lt__", &int16::operator<)
     .def("__lt__", pybind11::overload_cast<const int16&, const long&>(&operator<))
     .def("__lt__", pybind11::overload_cast<const int16&, const double&>(&operator<))
@@ -1670,35 +1929,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &int32::operator+)
     .def("__add__", pybind11::overload_cast<const int32&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const int8&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const int16&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const float32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int32&, const float64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int32&, const complex128&>(&operator+))
     .def("__sub__", &int32::operator-)
     .def("__sub__", pybind11::overload_cast<const int32&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const int8&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const int16&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const float32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const int32&, const float64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int32&, const complex128&>(&operator-))
     .def("__mul__", &int32::operator*)
     .def("__mul__", pybind11::overload_cast<const int32&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const int16&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const int64&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const float32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int32&, const float64&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int32&, const complex128&>(&operator*))
     .def("__truediv__", pybind11::overload_cast<const int32&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const int16&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const float32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int32&, const float64&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int32&, const complex128&>(&operator/))
     .def("__mod__", &int32::operator%)
     .def("__mod__", pybind11::overload_cast<const int32&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const int32&, const double&>(&operator%))
@@ -1716,25 +1983,38 @@ PYBIND11_MODULE(dtypes, m){
     .def("__floordiv__", pybind11::overload_cast<const int32&, const float32&>(&floordiv))
     .def("__floordiv__", pybind11::overload_cast<const int32&, const float64&>(&floordiv))
     .def("__pow__", &int32::power)
+    .def("__pow__", pybind11::overload_cast<const int32&, const long&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const int8&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const int16&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const int64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const float32&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const float64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int32&, const complex128&>(&power))
     .def("__abs__", &int32::abs)
     .def("__neg__", &int32::neg)
     .def("__pos__", &int32::pos)
     .def("__eq__", &int32::operator==)
     .def("__eq__", pybind11::overload_cast<const int32&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const int8&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const int16&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const float32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int32&, const float64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int32&, const complex128&>(&operator==))
     .def("__ne__", &int32::operator!=)
     .def("__ne__", pybind11::overload_cast<const int32&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int32&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const int8&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const int64&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const float32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int32&, const float64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int32&, const complex128&>(&operator!=))
     .def("__lt__", &int32::operator<)
     .def("__lt__", pybind11::overload_cast<const int32&, const long&>(&operator<))
     .def("__lt__", pybind11::overload_cast<const int32&, const double&>(&operator<))
@@ -1776,35 +2056,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &int64::operator+)
     .def("__add__", pybind11::overload_cast<const int64&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const int8&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const int16&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const int32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const float32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const int64&, const float64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const int64&, const complex128&>(&operator+))
     .def("__sub__", &int64::operator-)
     .def("'__sub__", pybind11::overload_cast<const int64&, const long&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const int8&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const int16&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const int32&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const float32&>(&operator-))
     .def("'__sub__", pybind11::overload_cast<const int64&, const float64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const int64&, const complex128&>(&operator-))
     .def("__mul__", &int64::operator*)
     .def("__mul__", pybind11::overload_cast<const int64&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const int16&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const int32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const float32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const int64&, const float64&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const int64&, const complex128&>(&operator*))
     .def("__truediv__", pybind11::overload_cast<const int64&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const double&>(&operator/))
+    .def("__trueidiv__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const int16&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const float32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const int64&, const float64&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const int64&, const complex128&>(&operator/))
     .def("__mod__", &int64::operator%)
     .def("__mod__", pybind11::overload_cast<const int64&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const int64&, const double&>(&operator%))
@@ -1824,30 +2112,36 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", &int64::power)
     .def("__pow__", pybind11::overload_cast<const int64&, const long&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const int8&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const int16&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const int32&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const float32&>(&power))
     .def("__pow__", pybind11::overload_cast<const int64&, const float64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const int64&, const complex128&>(&power))
     .def("__abs__", &int64::abs)
     .def("__neg__", &int64::neg)
     .def("__pos__", &int64::pos)
     .def("__eq__", &int64::operator==)
     .def("__eq__", pybind11::overload_cast<const int64&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const int8&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const int16&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const int32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const float32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const int64&, const float64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const int64&, const complex128&>(&operator==))
     .def("__ne__", &int64::operator!=)
     .def("__ne__", pybind11::overload_cast<const int64&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int64&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const int8&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const float32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const int64&, const float64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const int64&, const complex128&>(&operator!=))
     .def("__lt__", &int64::operator<)
     .def("__lt__", pybind11::overload_cast<const int64&, const long&>(&operator<))
     .def("__lt__", pybind11::overload_cast<const int64&, const double&>(&operator<))
@@ -1891,35 +2185,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &float32::operator+)
     .def("__add__", pybind11::overload_cast<const float32&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const int8&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const int16&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const int32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float32&, const float64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const float32&, const complex128&>(&operator+))
     .def("__sub__", &float32::operator-)
     .def("__sub__", pybind11::overload_cast<const float32&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const int8&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const int16&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const int32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float32&, const float64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const float32&, const complex128&>(&operator-))
     .def("__mul__", &float32::operator*)
     .def("__mul__", pybind11::overload_cast<const float32&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const int16&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const int32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const int64&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float32&, const float64&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const float32&, const complex128&>(&operator*))
     .def("__truediv__", &float32::operator/)
     .def("__truediv__", pybind11::overload_cast<const float32&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const int16&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float32&, const float64&>(&operator/))
+    .def("__treudiv__", pybind11::overload_cast<const float32&, const complex128&>(&operator/))
     .def("__mod__", &float32::operator%)
     .def("__mod__", pybind11::overload_cast<const float32&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const float32&, const double&>(&operator%))
@@ -1939,30 +2241,36 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", &float32::power)
     .def("__pow__", pybind11::overload_cast<const float32&, const long&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const int8&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const int16&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const int32&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const int64&>(&power))
     .def("__pow__", pybind11::overload_cast<const float32&, const float64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const float32&, const complex128&>(&power))
     .def("__abs__", &float32::abs)
     .def("__neg__", &float32::neg)
     .def("__pos__", &float32::pos)
     .def("__eq__", &float32::operator==)
     .def("__eq__", pybind11::overload_cast<const float32&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const int8&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const int16&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const int32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float32&, const float64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const float32&, const complex128&>(&operator==))
     .def("__ne__", &float32::operator!=)
     .def("__ne__", pybind11::overload_cast<const float32&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const float32&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const int8&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const int64&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float32&, const float64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const float32&, const complex128&>(&operator!=))
     .def("__lt__", &float32::operator<)
     .def("__lt__", pybind11::overload_cast<const float32&, const long&>(&operator<))
     .def("__lt__", pybind11::overload_cast<const float32&, const double&>(&operator<))
@@ -2006,35 +2314,43 @@ PYBIND11_MODULE(dtypes, m){
     .def("__add__", &float64::operator+)
     .def("__add__", pybind11::overload_cast<const float64&, const long&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const int8&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const int16&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const int32&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const int64&>(&operator+))
     .def("__add__", pybind11::overload_cast<const float64&, const float32&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const float64&, const complex128&>(&operator+))
     .def("__sub__", &float64::operator-)
     .def("__sub__", pybind11::overload_cast<const float64&, const long&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const int8&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const int16&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const int32&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const int64&>(&operator-))
     .def("__sub__", pybind11::overload_cast<const float64&, const float32&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const float64&, const complex128&>(&operator-))
     .def("__mul__", &float64::operator*)
     .def("__mul__", pybind11::overload_cast<const float64&, const long&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const int8&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const int16&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const int32&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const int64&>(&operator*))
     .def("__mul__", pybind11::overload_cast<const float64&, const float32&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const float64&, const complex128&>(&operator*))
     .def("__truediv__", &float64::operator/)
     .def("__truediv__", pybind11::overload_cast<const float64&, const long&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const int8&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const int16&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const int32&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const int64&>(&operator/))
     .def("__truediv__", pybind11::overload_cast<const float64&, const float32&>(&operator/))
+    .def("__ttrueidiv__", pybind11::overload_cast<const float64&, const complex128&>(&operator/))
     .def("__mod__", &float64::operator%)
     .def("__mod__", pybind11::overload_cast<const float64&, const long&>(&operator%))
     .def("__mod__", pybind11::overload_cast<const float64&, const double&>(&operator%))
@@ -2054,30 +2370,36 @@ PYBIND11_MODULE(dtypes, m){
     .def("__pow__", &float64::power)
     .def("__pow__", pybind11::overload_cast<const float64&, const long&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const int8&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const int16&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const int32&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const int64&>(&power))
     .def("__pow__", pybind11::overload_cast<const float64&, const float32&>(&power))
+    .def("__pow__", pybind11::overload_cast<const float64&, const complex128&>(&power))
     .def("__abs__", &float64::abs)
     .def("__neg__", &float64::neg)
     .def("__pos__", &float64::pos)
     .def("__eq__", &float64::operator==)
     .def("__eq__", pybind11::overload_cast<const float64&, const long&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const int8&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const int16&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const int32&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const int64&>(&operator==))
     .def("__eq__", pybind11::overload_cast<const float64&, const float32&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const float64&, const complex128&>(&operator==))
     .def("__ne__", &float64::operator!=)
     .def("__ne__", pybind11::overload_cast<const float64&, const long&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const float64&, const std::complex<double>&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const int8&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const int16&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const int32&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const int64&>(&operator!=))
     .def("__ne__", pybind11::overload_cast<const float64&, const float32&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const float64&, const complex128&>(&operator!=))
     .def("__lt__", &float64::operator<)
     .def("__lt__", pybind11::overload_cast<const float64&, const long&>(&operator<))
     .def("__lt__", pybind11::overload_cast<const float64&, const double&>(&operator<))
@@ -2111,10 +2433,83 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const float64&, const int64&>(&operator>=))
     .def("__ge__", pybind11::overload_cast<const float64&, const float32&>(&operator>=));
 
-  pybind11::class_<complex128>(m, "comple128")
-    .def(pybind11::init<double, double>(), pybind11::arg("real") = 0.0, pybind11::arg("imag") = 0.0)
-    .def("__repr__", &complex128::repr)
+  pybind11::class_<complex128>(m, "complex128")
+    .def(pybind11::init<double,double>())
+    .def(pybind11::init<float64,float64>())
+    .def(pybind11::init<std::complex<double>>())
     .def_property_readonly("nbits", &complex128::nbits)
-    ;
-}
-
+    .def_property_readonly("real", &complex128::real)
+    .def_property_readonly("imag", &complex128::imag)
+    .def("__repr__", &complex128::repr)
+    .def("value", &complex128::getValue)
+    .def("conj", &complex128::conj)
+    .def("magnitude", &complex128::magnitude)
+    .def("__add__", [](const complex128 &a, const complex128 &b) { return a + b; })
+    .def("__add__", pybind11::overload_cast<const complex128&, const long&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const double&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const int8&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const int16&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const int32&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const int64&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const float32&>(&operator+))
+    .def("__add__", pybind11::overload_cast<const complex128&, const float64&>(&operator+))
+    .def("__sub__", [](const complex128 &a, const complex128 &b) { return a - b; })
+    .def("__sub__", pybind11::overload_cast<const complex128&, const long&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const double&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const int8&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const int16&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const int32&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const int64&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const float32&>(&operator-))
+    .def("__sub__", pybind11::overload_cast<const complex128&, const float64&>(&operator-))
+    .def("__mul__", [](const complex128 &a, const complex128 &b) { return a * b; })
+    .def("__mul__", pybind11::overload_cast<const complex128&, const long&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const double&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const int8&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const int16&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const int32&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const int64&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const float32&>(&operator*))
+    .def("__mul__", pybind11::overload_cast<const complex128&, const float64&>(&operator*))
+    .def("__truediv__", [](const complex128 &a, const complex128 &b) { return a / b; })
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const long&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const double&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const int8&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const int16&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const int32&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const int64&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const float32&>(&operator/))
+    .def("__truediv__", pybind11::overload_cast<const complex128&, const float64&>(&operator/))
+    .def("__pow__", &complex128::power)
+    .def("__pow__", pybind11::overload_cast<const complex128&, const long&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const double&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const int8&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const int16&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const int32&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const int64&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const float32&>(&power))
+    .def("__pow__", pybind11::overload_cast<const complex128&, const float64&>(&power))
+    .def("__eq__", [](const complex128 &a, const complex128 &b) { return a == b; })
+    .def("__eq__", pybind11::overload_cast<const complex128&, const long&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const double&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const int8&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const int16&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const int32&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const int64&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const float32&>(&operator==))
+    .def("__eq__", pybind11::overload_cast<const complex128&, const float64&>(&operator==))
+    .def("__ne__", [](const complex128 &a, const complex128 &b) { return a != b; })
+    .def("__ne__", pybind11::overload_cast<const complex128&, const long&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const double&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const std::complex<double>&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const int8&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const int16&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const int32&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex128&, const int64&>(&operator!=))
+    .def("__ne__", pybind11::overload_cast<const complex1
