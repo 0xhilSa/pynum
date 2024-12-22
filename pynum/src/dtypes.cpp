@@ -419,7 +419,7 @@ complex128 operator/(const int8 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
 }
-complex128 power(const int8 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+complex128 power(const int8 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y)); }
 bool operator==(const int8 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
 bool operator!=(const int8 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
@@ -591,7 +591,7 @@ complex128 operator/(const int8 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
 }
-complex128 power(const int8 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const int8 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue())); }
 bool operator==(const int8 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
 bool operator!=(const int8 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
@@ -659,7 +659,7 @@ complex128 operator/(const int16 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
 }
-complex128 power(const int16 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+complex128 power(const int16 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y)); }
 bool operator==(const int16 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
 bool operator!=(const int16 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
@@ -833,7 +833,7 @@ complex128 operator/(const int16 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
 }
-complex128 power(const int16 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const int16 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue())); }
 bool operator==(const int16 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
 bool operator!=(const int16 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
@@ -899,7 +899,7 @@ complex128 operator/(const int32 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
 }
-complex128 power(const int32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+complex128 power(const int32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y)); }
 bool operator==(const int32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
 bool operator!=(const int32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
@@ -1065,7 +1065,7 @@ complex128 operator/(const int32 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
 }
-complex128 power(const int32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const int32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue())); }
 bool operator==(const int32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
 bool operator!=(const int32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
@@ -1133,7 +1133,7 @@ complex128 operator/(const int64 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
 }
-complex128 power(const int64 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+complex128 power(const int64 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y)); }
 bool operator==(const int64 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
 bool operator!=(const int64 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
@@ -1292,7 +1292,7 @@ complex128 operator/(const int64 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
 }
-complex128 power(const int64 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const int64 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue())); }
 bool operator==(const int64 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
 bool operator!=(const int64 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
@@ -1350,7 +1350,7 @@ complex128 operator/(const float32 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.real(),static_cast<double>(x.getValue()) / y.imag());
 }
-complex128 power(const float32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.real()),y.imag()); }
+complex128 power(const float32 &x, const std::complex<double> &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y)); }
 bool operator==(const float32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) == y.real(); }
 bool operator!=(const float32 &x, const std::complex<double> &y){ return static_cast<double>(x.getValue()) != y.real(); }
 
@@ -1482,7 +1482,7 @@ complex128 operator/(const float32 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(static_cast<double>(x.getValue()) / y.getValue().real(),static_cast<double>(x.getValue()) / y.getValue().imag());
 }
-complex128 power(const float32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const float32 &x, const complex128 &y){ return complex128(std::pow(static_cast<double>(x.getValue()),y.getValue())); }
 bool operator==(const float32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) == y.getValue().real(); }
 bool operator!=(const float32 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
@@ -1534,7 +1534,7 @@ complex128 operator/(const float64 &x, const std::complex<double> &y){
   if(y == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(x.getValue() / y.real(),x.getValue() / y.imag());
 }
-complex128 power(const float64 &x, const std::complex<double> &y){ return complex128(std::pow(x.getValue(),y.real()),y.imag()); }
+complex128 power(const float64 &x, const std::complex<double> &y){ return complex128(std::pow(x.getValue(),y)); }
 bool operator==(const float64 &x, const std::complex<double> &y){ return x.getValue() == y.real(); }
 bool operator!=(const float64 &x, const std::complex<double> &y){ return x.getValue() != y.real(); }
 
@@ -1666,7 +1666,7 @@ complex128 operator/(const float64 &x, const complex128 &y){
   if(y.getValue() == std::complex<double>(0,0)) throw std::runtime_error("ZeroDivisionError");
   return complex128(x.getValue() / y.getValue().real(),x.getValue() / y.getValue().imag());
 }
-complex128 power(const float64 &x, const complex128 &y){ return complex128(std::pow(x.getValue(),y.getValue().real()),y.getValue().imag()); }
+complex128 power(const float64 &x, const complex128 &y){ return complex128(std::pow(x.getValue(),y.getValue())); }
 bool operator==(const float64 &x, const complex128 &y){ return x.getValue() == y.getValue().real(); }
 bool operator!=(const float64 &x, const complex128 &y){ return x.getValue() != y.getValue().real(); }
 
