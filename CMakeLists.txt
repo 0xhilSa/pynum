@@ -6,7 +6,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 project(pynum LANGUAGES CXX)
 
 # Find Python first
-find_package(Python 3.10 REQUIRED COMPONENTS Interpreter Development)
+find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development)
 message(STATUS "Python_INCLUDE_DIRS: ${Python_INCLUDE_DIRS}")
 message(STATUS "Python_LIBRARIES: ${Python_LIBRARIES}")
 
