@@ -16,8 +16,8 @@
 
 ## Prerequisites
 Before building the library, ensure the following dependencies are installed
-- cmake
-- pybind11
+- [cmake](https://cmake.org/download/)
+- [pybind11](https://pybind11.readthedocs.io/en/stable/installing.html)
 
 ## Installation and Usage
 To clone, build, and install the library, follow these steps:
