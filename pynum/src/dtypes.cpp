@@ -67,6 +67,7 @@ class int16{
 
   public:
     explicit int16(int16_t val) : value(val){}
+    explicit int16(double val) : value(static_cast<int16_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
     int getValue() const { return static_cast<int>(value); }
@@ -118,6 +119,7 @@ class int32{
 
   public:
     explicit int32(int32_t val) : value(val){}
+    explicit int32(double val) : value(static_cast<int32_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
     int32_t getValue() const { return value; }
@@ -170,6 +172,7 @@ class int64{
 
   public:
     explicit int64(int64_t val) : value(val){}
+    explicit int64(double val) : value(static_cast<int64_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
     int64_t getValue() const { return value; }
@@ -878,7 +881,7 @@ float64 operator/(const int32 &x, const double &y){
 }
 int64 floordiv(const int32 &x, const double &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(x.getValue() / static_cast<int32_t>(y));
+  return int64(x.getValue() / static_cast<int64_t>(y));
 }
 float64 operator%(const int32 &x, const double &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
@@ -987,7 +990,7 @@ float64 operator/(const int32 &x, const int64 &y){
 }
 int64 floordiv(const int32 &x, const int64 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(x.getValue() / static_cast<int32_t>(y.getValue()));
+  return int64(x.getValue() / static_cast<int64_t>(y.getValue()));
 }
 int64 operator%(const int32 &x, const int64 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
@@ -2089,6 +2092,7 @@ PYBIND11_MODULE(dtypes, m){
 
   pybind11::class_<int32>(m, "int32")
     .def(pybind11::init<int32_t>())
+    .def(pybind11::init<double>())
     .def("__repr__", &int32::repr)
     .def_property_readonly("nbits", &int32::nbits)
     .def("getValue", &int32::getValue)
@@ -2242,6 +2246,7 @@ PYBIND11_MODULE(dtypes, m){
 
   pybind11::class_<int64>(m, "int64")
     .def(pybind11::init<int64_t>())
+    .def(pybind11::init<double>())
     .def("__repr__", &int64::repr)
     .def_property_readonly("nbits", &int64::nbits)
     .def("getValue", &int64::getValue)
