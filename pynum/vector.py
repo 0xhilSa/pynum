@@ -17,6 +17,7 @@ class Vector:
 
   def __check__(self, object, dtype):
     if not isinstance(object, list): raise TypeError("given dtype must be a list")
+    if dtype is not None: return [dtype(x) for x in object],dtype
     if any(isinstance(x,(complex,dtypes.complex128)) for x in object): dtype = dtypes.complex128
     elif all(isinstance(x,(int,dtypes.int8,dtypes.int16,dtypes.int32,dtypes.int64))for x in object): dtype = dtypes.int64
     else: dtype = dtypes.float64
