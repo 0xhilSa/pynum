@@ -1,6 +1,5 @@
 import subprocess
 from .vector import *
-from . import dtypes
 
 
 def is_cuda_available():

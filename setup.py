@@ -3,15 +3,15 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 import sys
 import os
 
-python_include_dir = os.path.join(sys.prefix, 'include', f'python{sys.version_info.major}.{sys.version_info.minor}')
+python_include_dir = os.path.join(sys.prefix, "include", f"python{sys.version_info.major}.{sys.version_info.minor}")
 
 ext_modules = [
   Pybind11Extension(
     "pynum.dtypes",
     ["pynum/src/dtypes.cpp"],
     include_dirs=[python_include_dir],
-    extra_compile_args=['-std=c++17'],
-    language='c++'
+    extra_compile_args = ["-std=c++17"],
+    language = "c++"
   ),
 ]
 

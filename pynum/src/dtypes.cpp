@@ -18,6 +18,7 @@ class int8{
     explicit int8(int8_t val) : value(val){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(int8_t); } // for cpp
     int getValue() const { return static_cast<int>(value); }
     
     int8 operator+(const int8 &other) const { return int8(value + other.value); }
@@ -67,9 +68,9 @@ class int16{
 
   public:
     explicit int16(int16_t val) : value(val){}
-    explicit int16(double val) : value(static_cast<int16_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(int16_t); } // for cpp
     int getValue() const { return static_cast<int>(value); }
     
     int16 operator+(const int16 &other) const { return int16(value + other.value); }
@@ -122,6 +123,7 @@ class int32{
     explicit int32(double val) : value(static_cast<int32_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(int32_t); } // for cpp
     int32_t getValue() const { return value; }
 
     int32 operator+(const int32 &other) const { return int32(value + other.value); }
@@ -175,6 +177,7 @@ class int64{
     explicit int64(double val) : value(static_cast<int64_t>(val)){}
     std::string repr() const { return std::to_string(value); }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const {  return sizeof(int64_t); } // for cpp 
     int64_t getValue() const { return value; }
 
     int64 operator+(const int64 &other) const { return int64(value + other.value); }
@@ -231,6 +234,7 @@ class float32{
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(float); }
     explicit float32(int16_t val) : value(static_cast<float>(val)){}
     explicit float32(int32_t val) : value(static_cast<float>(val)){}
     explicit float32(int64_t val) : value(static_cast<float>(val)){}
@@ -278,6 +282,7 @@ class float64{
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(double); }
     explicit float64(int16_t val) : value(static_cast<double>(val)){}
     explicit float64(int32_t val) : value(static_cast<double>(val)){}
     explicit float64(int64_t val) : value(static_cast<double>(val)){}
@@ -332,6 +337,7 @@ class complex128{
       return oss.str();
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
+    size_t size() const { return sizeof(std::complex<double>); }
     std::complex<double> getValue() const { return value; }
     float64 real() const { return float64(value.real()); }
     float64 imag() const { return float64(value.imag()); }
@@ -354,38 +360,38 @@ class complex128{
 
 
 // functions for int8 with builtin dtypes
-int64 operator+(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) + y); }
-int64 operator-(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) - y); }
-int64 operator*(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) * y); }
+int64 operator+(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) + y); }
+int64 operator-(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) - y); }
+int64 operator*(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) * y); }
 int64 operator/(const int8 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / y);
+  return int64(static_cast<int64_t>(x.getValue()) / y);
 }
 int64 floordiv(const int8 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / y);
+  return int64(static_cast<int64_t>(x.getValue()) / y);
 }
 int64 operator%(const int8 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) % y);
+  return int64(static_cast<int64_t>(x.getValue()) % y);
 }
 int64 power(const int8 &x, const long &y){
   if(y < 0) throw std::runtime_error("NegativeExponentError");
-  long res = 1;
-  for(long i = 0; i < y; ++i){ res *= static_cast<long>(x.getValue()); }
+  int64_t res = 1;
+  for(int64_t i = 0; i < y; ++i){ res *= static_cast<int64_t>(x.getValue()); }
   return int64(res);
 }
-bool operator==(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) == y; }
-bool operator!=(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) != y; }
-bool operator>(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) > y; }
-bool operator>=(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) >= y; }
-bool operator<(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) < y; }
-bool operator<=(const int8 &x, const long &y){ return static_cast<long>(x.getValue()) <= y; }
-int64 operator<<(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) << y); }
-int64 operator>>(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) >> y); }
-int64 operator&(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
-int64 operator|(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
-int64 operator^(const int8 &x, const long &y){ return int64(static_cast<long>(x.getValue()) & y); }
+bool operator==(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) == y; }
+bool operator!=(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) != y; }
+bool operator>(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) > y; }
+bool operator>=(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) >= y; }
+bool operator<(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) < y; }
+bool operator<=(const int8 &x, const long &y){ return static_cast<int64_t>(x.getValue()) <= y; }
+int64 operator<<(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) << y); }
+int64 operator>>(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) >> y); }
+int64 operator&(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) & y); }
+int64 operator|(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) & y); }
+int64 operator^(const int8 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) & y); }
 
 float64 operator+(const int8 &x, const double &y){ return float64(static_cast<double>(x.getValue()) + y); }
 float64 operator-(const int8 &x, const double &y){ return float64(static_cast<double>(x.getValue()) - y); }
@@ -599,25 +605,25 @@ bool operator==(const int8 &x, const complex128 &y){ return static_cast<double>(
 bool operator!=(const int8 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
 // functions for int16 with builtin dtypes
-int64 operator+(const int16 &x, const long &y){ return int64(static_cast<long>(x.getValue()) + y); }
-int64 operator-(const int16 &x, const long &y){ return int64(static_cast<long>(x.getValue()) - y); }
-int64 operator*(const int16 &x, const long &y){ return int64(static_cast<long>(x.getValue()) * y); }
+int64 operator+(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) + y); }
+int64 operator-(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) - y); }
+int64 operator*(const int16 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) * y); }
 float64 operator/(const int16 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
   return float64(static_cast<double>(x.getValue()) / static_cast<double>(y));
 }
 int64 floordiv(const int16 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / y);
+  return int64(static_cast<int64_t>(x.getValue()) / y);
 }
 int64 operator%(const int16 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / y);
+  return int64(static_cast<int64_t>(x.getValue()) / y);
 }
 int64 power(const int16 &x, const long &y){
   if(y < 0) throw std::runtime_error("NegativeExponentError");
-  long res = 1;
-  for(long i = 0; i < y; ++i){ res *= static_cast<long>(x.getValue()); }
+  int64_t res = 1;
+  for(int64_t i = 0; i < y; ++i){ res *= static_cast<int64_t>(x.getValue()); }
   return int64(res);
 }
 bool operator==(const int16 &x, const long &y){ return static_cast<long>(x.getValue()) == y; }
@@ -841,23 +847,23 @@ bool operator==(const int16 &x, const complex128 &y){ return static_cast<double>
 bool operator!=(const int16 &x, const complex128 &y){ return static_cast<double>(x.getValue()) != y.getValue().real(); }
 
 // functions for int32 with builtin dtypes
-int64 operator+(const int32 &x, const long &y){ return int64(static_cast<long>(x.getValue()) + y); }
-int64 operator-(const int32 &x, const long &y){ return int64(static_cast<long>(x.getValue()) - y); }
-int64 operator*(const int32 &x, const long &y){ return int64(static_cast<long>(x.getValue()) * y); }
+int64 operator+(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) + y); }
+int64 operator-(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) - y); }
+int64 operator*(const int32 &x, const long &y){ return int64(static_cast<int64_t>(x.getValue()) * y); }
 float64 operator/(const int32 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
   return float64(static_cast<double>(x.getValue()) / static_cast<double>(y));
 }
 int64 floordiv(const int32 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / static_cast<long>(y)); }
+  return int64(static_cast<int64_t>(x.getValue()) / static_cast<int64_t>(y)); }
 int64 operator%(const int32 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) % static_cast<long>(y)); }
+  return int64(static_cast<int64_t>(x.getValue()) % static_cast<int64_t>(y)); }
 int64 power(const int32 &x, const long &y){
   if(y < 0) throw std::runtime_error("NegativeExponentError");
-  long res = 1;
-  for(long i = 0; i < y; ++i){ res *= x.getValue(); }
+  int64_t res = 1;
+  for(int64_t i = 0; i < y; ++i){ res *= x.getValue(); }
   return int64(res);
 }
 bool operator==(const int32 &x, const long &y){ return x.getValue() == static_cast<long>(y); }
@@ -1499,7 +1505,7 @@ float64 operator/(const float64 &x, const long &y){
 }
 int64 floordiv(const float64 &x, const long &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / static_cast<long>(y));
+  return int64(static_cast<int64_t>(x.getValue()) / static_cast<int64_t>(y));
 }
 float64 operator%(const float64 &x, const long &y){ return float64(std::fmod(x.getValue(),static_cast<double>(y))); }
 float64 power(const float64 &x, const long &y){ return float64(std::pow(x.getValue(),static_cast<double>(y))); }
@@ -1519,7 +1525,7 @@ float64 operator/(const float64 &x, const double &y){
 }
 int64 floordiv(const float64 &x, const double &y){
   if(y == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) / static_cast<long>(y));
+  return int64(static_cast<int64_t>(x.getValue()) / static_cast<int64_t>(y));
 }
 float64 operator%(const float64 &x, const double &y){ return float64(std::fmod(x.getValue(),y)); }
 float64 power(const float64 &x, const double &y){ return float64(std::pow(x.getValue(),y)); }
@@ -1551,7 +1557,7 @@ float64 operator/(const float64 &x, const int8 &y){
 }
 int64 floordiv(const float64 &x, const int8 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) + static_cast<long>(y.getValue()));
+  return int64(static_cast<int64_t>(x.getValue()) + static_cast<int64_t>(y.getValue()));
 }
 float64 operator%(const float64 &x, const int8 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
@@ -1575,7 +1581,7 @@ float64 operator/(const float64 &x, const int16 &y){
 }
 int64 floordiv(const float64 &x, const int16 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) + static_cast<long>(y.getValue()));
+  return int64(static_cast<int64_t>(x.getValue()) + static_cast<int64_t>(y.getValue()));
 }
 float64 operator%(const float64 &x, const int16 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
@@ -1599,7 +1605,7 @@ float64 operator/(const float64 &x, const int32 &y){
 }
 int64 floordiv(const float64 &x, const int32 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) + static_cast<long>(y.getValue()));
+  return int64(static_cast<int64_t>(x.getValue()) + static_cast<int64_t>(y.getValue()));
 }
 float64 operator%(const float64 &x, const int32 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
@@ -1623,7 +1629,7 @@ float64 operator/(const float64 &x, const int64 &y){
 }
 int64 floordiv(const float64 &x, const int64 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) + static_cast<long>(y.getValue()));
+  return int64(static_cast<int64_t>(x.getValue()) + static_cast<int64_t>(y.getValue()));
 }
 float64 operator%(const float64 &x, const int64 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
@@ -1647,7 +1653,7 @@ float64 operator/(const float64 &x, const float32 &y){
 }
 int64 floordiv(const float64 &x, const float32 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");
-  return int64(static_cast<long>(x.getValue()) + static_cast<long>(y.getValue()));
+  return int64(static_cast<int64_t>(x.getValue()) + static_cast<int64_t>(y.getValue()));
 }
 float64 operator%(const float64 &x, const float32 &y){
   if(y.getValue() == 0) throw std::runtime_error("ZeroDivisionError");

@@ -1,37 +1,38 @@
 from __future__ import annotations
-from typing import List,Any,Type,Tuple,Union
+from typing import List, Any, Type, Tuple
 from . import dtypes
 
 class Shape:
-  def __init__(self, object):
-    self.__length = (len(object),)
+  def __init__(self, obj: Any): self.__length = (len(obj),)
   def __repr__(self): return str(self.__length)
+  def __len__(self): return self.__length[0]
 
 class Vector:
-  def __init__(self, array1D: List[Type], dtype:Type=None, grad:bool=False, device:str="cpu", const:bool=False):
-    self.__array1D,self.__dtype,self.__device,self.__const = self.__verify__(array1D,dtype,device,const)
-    self.__shape = Shape(array1D)
-    self.__grad = grad
+  def __init__(self, object:List[Any], dtype:Type=None, const:bool=False, device:str="cpu"):
+    if device != "cpu": raise RuntimeError(f"Sorry, this library is in under construction, it doesn't supports for device={device} for now!!")
+    self.__object, self.__dtype  = self.__check__(object, dtype)
+    self.__device = device
+    self.__shape = Shape(object)
+    self.__const = const
 
-  def __verify__(self, array1D, dtype, device, const):
-    if not isinstance(array1D,list): raise TypeError("given object must be a list")
-    if dtype is None:
-      if any(isinstance(value, (complex,dtypes.complex128)) for value in array1D): dtype = dtypes.complex128
-      elif all(isinstance(value, (int,dtypes.int64)) for value in array1D): dtype = dtypes.int64
-      else:
-        for index,value in enumerate(array1D): array1D[index] = float(array1D)
-        dtype = dtypes.float64
-    for index,value in enumerate(array1D): array1D[index] = dtype(value)
-    return array1D,dtype,device,const
+  def __check__(self, object, dtype):
+    if not isinstance(object, list): raise TypeError("given dtype must be a list")
+    if any(isinstance(x,(complex,dtypes.complex128)) for x in object): dtype = dtypes.complex128
+    elif all(isinstance(x,(int,dtypes.int8,dtypes.int16,dtypes.int32,dtypes.int64))for x in object): dtype = dtypes.int64
+    else: dtype = dtypes.float64
+    return [dtype(x) for x in object],dtype
 
-  def __repr__(self): return f"<Vector <dtype={self.__dtype.__name__}, shape={self.__shape}, device={self.__device}, grad={self.__grad}>>"
+  def __repr__(self): return f"<Vector(size={self.__shape}, dtype={self.__dtype.__name__}, device={self.__device}, device={self.__device})>"
+  def __getitem__(self, index): return self.__object[index]
+  def __setitem__(self, index, value):
+    if self.__const: raise RuntimeError("can't modify a constant vector")
+    self.__object[index] = value
 
   @property
   def dtype(self): return self.__dtype.__name__
   @property
   def device(self): return self.__device
   @property
+  def shape(self): return self.__shape
+  
   def is_const(self): return self.__const
-
-  def __getitem__(self, index:int): return self.__array1D[index]
-  def to_list(self): return self.__array1D
