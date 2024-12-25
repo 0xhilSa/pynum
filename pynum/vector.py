@@ -1,18 +1,23 @@
 from __future__ import annotations
 from typing import List, Any, Type, Tuple
+from dataclasses import dataclass
 from . import dtypes
 
+@dataclass(frozen = True)
 class Shape:
-  def __init__(self, obj: Any): self.__length = (len(obj),)
-  def __repr__(self): return str(self.__length)
-  def __len__(self): return self.__length[0]
+  dims:Tuple[int,...]
+  def __repr__(self): return f"Shape{self.dims}"
+  def __len__(self): return self.dims[0] if self.dims else 0
+
+SUPPORTED_DEVICES = {"cpu"}
 
 class Vector:
   def __init__(self, object:List[Any], dtype:Type=None, const:bool=False, device:str="cpu"):
-    if device != "cpu": raise RuntimeError(f"Sorry, this library is in under construction, it doesn't supports for device={device} for now!!")
+    if device not in SUPPORTED_DEVICES: raise RuntimeError(f"Unsupported device '{device}'. Supported devices: {', '.join(SUPPORTED_DEVICES)}")
+    if not object: raise ValueError("The input list cannot be empty")
     self.__object, self.__dtype  = self.__check__(object, dtype)
     self.__device = device
-    self.__shape = Shape(object)
+    self.__shape = Shape((len(object),))
     self.__const = const
 
   def __check__(self, object, dtype):
