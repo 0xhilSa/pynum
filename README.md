@@ -4,15 +4,14 @@
   <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
 </picture>
   
-<h3><i><b>a small python library for 1D and 2D arrays with GPU supports</b></i></h3>
+<h3><i><b>a small python library for 1D and 2D arrays</b></i></h3>
 </div>
 
 ---
 
 ## To Do
 - ops between dtypes
-- check whether to use pyopencl or go with C++ CUDA programming
-- vector(1D array) and its ops for CPU and GPU
+- vector(1D array) and Matrix(2D array)
 
 ## Prerequisites
 Before building the library, ensure the following dependencies are installed
