@@ -275,7 +275,11 @@ class float64{
     double value;
 
   public:
+		float64() : value(0.0){}
     explicit float64(double val) : value(val){}
+		explicit float64(int16_t val) : value(static_cast<double>(val)){}
+		explicit float64(int32_t val) : value(static_cast<double>(val)){}
+		explicit float64(int64_t val) : value(static_cast<double>(val)){}
     std::string repr() const {
       std::ostringstream oss;
       oss << std::setprecision(15) << value;
@@ -283,9 +287,6 @@ class float64{
     }
     std::string nbits() const { return std::to_string(sizeof(value) * 8); }
     size_t size() const { return sizeof(double); }
-    explicit float64(int16_t val) : value(static_cast<double>(val)){}
-    explicit float64(int32_t val) : value(static_cast<double>(val)){}
-    explicit float64(int64_t val) : value(static_cast<double>(val)){}
     double getValue() const { return value; }
   
     float64 operator+(const float64 &other) const { return float64(value + other.value); }
@@ -2534,10 +2535,10 @@ PYBIND11_MODULE(dtypes, m){
     .def("__ge__", pybind11::overload_cast<const float32&, const float64&>(&operator>=));
 
   pybind11::class_<float64>(m, "float64")
-    .def(pybind11::init<float>())
-    .def(pybind11::init<int16_t>())
-    .def(pybind11::init<int32_t>())
-    .def(pybind11::init<int64_t>())
+    .def(pybind11::init<float>(), pybind11::arg("value"))
+    .def(pybind11::init<int16_t>(), pybind11::arg("value"))
+    .def(pybind11::init<int32_t>(), pybind11::arg("value"))
+    .def(pybind11::init<int64_t>(), pybind11::arg("value"))
     .def("__repr__", &float64::repr)
     .def_property_readonly("nbits", &float64::nbits)
     .def("__add__", &float64::operator+)
