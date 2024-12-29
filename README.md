@@ -18,25 +18,13 @@ Before building the library, ensure the following dependencies are installed
 - [cmake](https://cmake.org/download/)
 - [pybind11](https://pybind11.readthedocs.io/en/stable/installing.html)
 
-## Installation and Usage
-To clone, build, and install the library, follow these steps:
+## Installation
+1. Clone this repo and navigate to the cloned dir
 ```bash
-# clone the repository
-git clone "https://github.com/0xhilSa/pynum"
+git clone https://github.com/0xhilSa/pynum.git && cd pynum
+```
 
-# navigate to the project directory
-cd pynum
-
-# create a build directory and navigate into it
-mkdir build && cd build
-
-# generate build files using CMake
-cmake ..
-
-# return to the main directory
-cd ..
-
-# build the Python package and install it
-python3 -m build
-pip install dist/pynum-0.0.1-cp310-cp310-linux_x86_64.whl
+2. Run the following bash script
+```bash
+bash compile.sh
 ```
