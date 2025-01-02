@@ -3,3 +3,4 @@ build
 pynum.egg-info
 dist
 .vscode
+test.*

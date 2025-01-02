@@ -2,57 +2,96 @@ from __future__ import annotations
 from typing import List, Any, Type, Tuple, Optional, Union
 import random
 import numpy as np
+from .src.cu_manager import (
+  cuda_alloc_int, cuda_alloc_long, cuda_alloc_double, cuda_alloc_complex,
+  memcpy_htod_int, memcpy_htod_long, memcpy_htod_double, memcpy_htod_complex,
+  memcpy_dtoh_int, memcpy_dtoh_long, memcpy_dtoh_double, memcpy_dtoh_complex,
+  cuda_free, cuda_query_free_memory
+)
 from .ops import Ops, GroupOp, ops_mapping
-from .device import Device, CUDAManager
-from .shape import Shape
 
 
-cuda_manager = CUDAManager()
+DEVICE_SUPPORTED = ["cpu","cuda"]
+FLOATING = [float, np.float16, np.float32, np.float64, np.float128]
+INTEGER = [int, np.int8, np.int16, np.int32, np.int64]
+COMPLEX = [complex, np.complex128]
+ALL = FLOATING + INTEGER + COMPLEX
+
 
 class Vector:
-  def __init__(self, object:List[Any], dtype:Type=None, const:bool=False, device:str="cpu"):
-    if device.upper() not in Device.SUPPORTED_DEVICES: raise RuntimeError(f"Unsupported device '{device}'. Supported devices: {', '.join(Device.SUPPORTED_DEVICES)}")
-    if not object: raise ValueError("The input list cannot be empty")
-    self.__object, self.__dtype = self.__check__(object, dtype)
-    self.__device = Device(device.upper())
-    self.__shape = Shape((len(object),))
+  def cuda_alloc(obj:List[Any], dtype:Type):
+    if dtype in FLOATING: return cuda_alloc_double(obj)
+    elif dtype in INTEGER: return cuda_alloc_long(obj)
+    elif dtype in COMPLEX: return cuda_alloc_complex(obj)
+  def memcpy_htod(ptr, obj:List[Any], dtype:Type):
+    if dtype in FLOATING: return memcpy_htod_double(ptr, obj)
+    elif dtype in INTEGER: return memcpy_htod_long(ptr, obj)
+    elif dtype in COMPLEX: return memcpy_htod_complex(ptr, obj)
+  def memcpy_dtoh(ptr, length:int, dtype:Type):
+    if dtype in FLOATING: return memcpy_dtoh_double(ptr, length)
+    elif dtype in INTEGER: return memcpy_dtoh_long(ptr, length)
+    elif dtype in COMPLEX: return memcpy_dtoh_complex(ptr, length)
+  def __init__(
+    self,
+    obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]],
+    dtype:Type=None,
+    const:bool=False,
+    device:str="cpu"
+  ) -> None:
+    self.__obj, self.__dtype, self.__device, self.__length = self.__check__(obj, dtype, device)
     self.__const = const
-    #self.__cuda_handle = None
-    #if self.__device.to_str() == "CUDA": self.__cuda_handle = cuda_manager.allocate(self.__object, self.__dtype)
-  def __check__(self, object, dtype):
-    if not isinstance(object, list): raise TypeError("Input must be a list")
-    if dtype is not None: return [dtype(x) for x in object], dtype
-    if any(isinstance(x, (complex, np.complex128)) for x in object): dtype = np.complex128
-    elif all(isinstance(x, int) for x in object): dtype = np.int64
-    else: dtype = np.float64
-    return [dtype(x) for x in object], dtype
-  def __repr__(self): return f"<Vector(size={self.__shape}, dtype={self.__dtype.__name__}, const={self.__const}, device={self.__device})>"
-  def __getitem__(self, index: Union[int, slice]):
-    if isinstance(index, slice):
-       sliced_obj = self.__object[index]
-       return Vector(sliced_obj, dtype=self.__dtype, const=self.__const, device=self.__device)
-    return self.__object[index]
-  def __setitem__(self, index, value):
-    if self.__const: raise RuntimeError("Can't modify a constant vector")
-    self.__object[index] = value
+  def __check__(self, obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]], dtype:Type, device:str) -> Tuple[Any, Type, str, int]:
+    if dtype is None:
+      if any(isinstance(x,(complex,np.complex128)) for x in obj): dtype = np.complex128
+      elif all(isinstance(x,(int,np.integer)) for x in obj): dtype = np.int64
+      elif any(isinstance(x,(float,np.floating)) for x in obj): dtype = np.float64
+      else: raise ValueError("Mixed or unsupported types in obj. Provide a specific")
+    obj = [dtype(x) for x in obj]
+    device = device.lower()
+    if device not in DEVICE_SUPPORTED: raise ValueError(f"Unsupported device '{device}', it could be either 'cpu' or 'cuda'")
+    if device == "cuda":
+      cuda_ptr = Vector.cuda_alloc(obj, dtype)
+      Vector.memcpy_htod(cuda_ptr, obj, dtype)
+      # except Exception as e:
+        # cuda_free(cuda_ptr)
+        # raise RuntimeError(f"CUDA memory initialization failed: {e}") 
+      return cuda_ptr, dtype, device, len(obj)
+    return obj, dtype, device, len(obj)
+  def __repr__(self) -> str: return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
   @property
-  def dtype(self): return self.__dtype.__name__
+  def device(self) -> str: return self.__device
   @property
-  def device(self): return self.__device
+  def dtype(self) -> Type: return self.__dtype.__name__
   @property
-  def shape(self): return self.__shape
-  def is_const(self): return self.__const
-  @staticmethod
-  def rand(length:int, dtype:Type=np.float64, lower_bound:int=0, upper_bound:int=1, seed:Optional[int]=None, const:bool=False, device="cpu"):
-    if seed is not None: random.seed(seed)
-    if dtype in (float, np.float32, np.float64): rand_vec = [random.uniform(lower_bound, upper_bound) for _ in range(length)]
-    elif dtype in (int, np.int8, np.int16, np.int32, np.int64): rand_vec = [random.randint(lower_bound, upper_bound) for _ in range(length)]
-    else: raise TypeError(f"Random generation not supported for dtype {dtype}")
-    return Vector(rand_vec, dtype=dtype, const=const, device=device)
-  @staticmethod
-  def zeros(length:int, dtype:Type=np.float64, const:bool=False, device="cpu"): return Vector([0] * length, dtype=dtype, const=const, device=device)
-  @staticmethod
-  def ones(length:int, dtype:Type=np.float64, const:bool=False, device="cpu"): return Vector([1] * length, dtype=dtype, const=const, device=device)
-  @staticmethod
-  def fill(value:Any, length:int, dtype:Type=np.float64, const: bool = False, device="cpu"): return Vector([value] * length, dtype=dtype, const=const, device=device)
-  def add(self, x:Union[Vector,Any], ops:Ops, const:bool=False, device:str="cpu"): pass
+  def length(self) -> int: return self.__length
+  def numpy(self):
+    if self.__device == "cuda":
+      # if self.__dtype in          # something needs to be done here
+      return np.array(Vector.memcpy_dtoh(self.__obj, self.__length, ))
+    return np.array(self.__obj)
+  def __del__(self):
+    if self.__device == "cuda": cuda_free(self.__obj)
+  def __getitem__(self, index:int):
+    if not (0 <= index < self.__length): raise IndexError(f"Index must lie from 0(included) to {self.__length - 1}(included)")
+    if self.__device == "cpu": return self.__obj[index]
+    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)[index]
+  def __setitem__(self, index:int, value:Any): pass
+  def to(self, device:str):
+    if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
+    if device.lower() == self.__device: return
+    if device.lower() == "cuda":
+      cuda_ptr = Vector.cuda_alloc(self.__obj, self.__dtype)
+      Vector.memcpy_htod(cuda_ptr, self.__obj, self.__dtype)
+      self.__obj = cuda_ptr
+    elif device.lower() == "cpu": self.__obj = Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)
+    self.__device = device.lower()
+  def cuda(self):
+    if self.__device == "cuda": return
+    cuda_ptr = Vector.cuda_alloc(self.__obj, self.__dtype)
+    Vector.memcpy_htod(cuda_ptr, self.__obj, self.__dtype)
+    self.__obj = cuda_ptr
+    self.__device = "cuda"
+  def cpu(self):
+    if self.__device == "cpu": return
+    self.__obj = Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)
+    self.__device = "cpu"
