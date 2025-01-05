@@ -5,14 +5,14 @@ import os
 
 module = Extension(
   "pynum",
-  sources = ["pynum/src/cu_manager.c"],
+  sources = ["pynum/src/cuda_stream.c"],
   libraries = ["cuda","cudart"]
 )
 
 
 setup(
   name = "pynum",
-  version = "0.0.1",
+  version = "0.0.1.1",
   url = "https://github.com/0xhilSa/pynum",
   packages = find_packages(include=['pynum', 'pynum.src']),
   ext_modules = [module],

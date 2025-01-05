@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Any, Type, Tuple, Optional, Union
 import numpy as np
-from .src.cu_manager import (
+from .src.cuda_stream import (
   cuda_alloc_int, cuda_alloc_long, cuda_alloc_double, cuda_alloc_complex,
   memcpy_htod_int, memcpy_htod_long, memcpy_htod_double, memcpy_htod_complex,
   memcpy_dtoh_int, memcpy_dtoh_long, memcpy_dtoh_double, memcpy_dtoh_complex,

@@ -360,12 +360,12 @@ static PyMethodDef CuManagerMethods[] = {
   {NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef cu_manager_module = {
+static struct PyModuleDef cuda_stream_module = {
   PyModuleDef_HEAD_INIT,
-  "cu_manager",
+  "cuda_stream",
   "Extended CUDA memory management module",
   -1,
   CuManagerMethods
 };
 
-PyMODINIT_FUNC PyInit_cu_manager(void){ return PyModule_Create(&cu_manager_module); }
+PyMODINIT_FUNC PyInit_cuda_stream(void){ return PyModule_Create(&cuda_stream_module); }
