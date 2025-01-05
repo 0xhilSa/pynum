@@ -79,7 +79,7 @@ class Vector:
   def __getitem__(self, index:int):
     if not (0 <= index < self.__length): raise IndexError(f"Index must lie from 0(included) to {self.__length - 1}(included)")
     if self.__device == "cpu": return self.__obj[index]
-    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)      # checking out something
+    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)[0]
   def __setitem__(self, index:int, value:Any): pass
   def to(self, device:str):
     if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
