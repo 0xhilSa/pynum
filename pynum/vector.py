@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import List, Any, Type, Tuple, Optional, Union
-import random
 import numpy as np
 from .src.cu_manager import (
   cuda_alloc_int, cuda_alloc_long, cuda_alloc_double, cuda_alloc_complex,
@@ -19,27 +18,34 @@ ALL = FLOATING + INTEGER + COMPLEX
 
 
 class Vector:
+  @staticmethod
   def cuda_alloc(obj:List[Any], dtype:Type):
     if dtype in FLOATING: return cuda_alloc_double(obj)
     elif dtype in INTEGER: return cuda_alloc_long(obj)
     elif dtype in COMPLEX: return cuda_alloc_complex(obj)
+  @staticmethod
   def memcpy_htod(ptr, obj:List[Any], dtype:Type):
     if dtype in FLOATING: return memcpy_htod_double(ptr, obj)
     elif dtype in INTEGER: return memcpy_htod_long(ptr, obj)
     elif dtype in COMPLEX: return memcpy_htod_complex(ptr, obj)
+  @staticmethod
   def memcpy_dtoh(ptr, length:int, dtype:Type):
     if dtype in FLOATING: return memcpy_dtoh_double(ptr, length)
     elif dtype in INTEGER: return memcpy_dtoh_long(ptr, length)
     elif dtype in COMPLEX: return memcpy_dtoh_complex(ptr, length)
+  @staticmethod
+  def free(ptr): cuda_fee(ptr)
   def __init__(
     self,
     obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]],
     dtype:Type=None,
     const:bool=False,
-    device:str="cpu"
+    device:str="cpu",
+    requires_grad:bool=False
   ) -> None:
     self.__obj, self.__dtype, self.__device, self.__length = self.__check__(obj, dtype, device)
     self.__const = const
+    self.__grad = requires_grad
   def __check__(self, obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]], dtype:Type, device:str) -> Tuple[Any, Type, str, int]:
     if dtype is None:
       if any(isinstance(x,(complex,np.complex128)) for x in obj): dtype = np.complex128
@@ -50,12 +56,13 @@ class Vector:
     device = device.lower()
     if device not in DEVICE_SUPPORTED: raise ValueError(f"Unsupported device '{device}', it could be either 'cpu' or 'cuda'")
     if device == "cuda":
-      cuda_ptr = Vector.cuda_alloc(obj, dtype)
-      Vector.memcpy_htod(cuda_ptr, obj, dtype)
-      # except Exception as e:
-        # cuda_free(cuda_ptr)
-        # raise RuntimeError(f"CUDA memory initialization failed: {e}") 
-      return cuda_ptr, dtype, device, len(obj)
+      try:
+        cuda_ptr = Vector.cuda_alloc(obj, dtype)
+        Vector.memcpy_htod(cuda_ptr, obj, dtype)
+        return cuda_ptr, dtype, device, len(obj)
+      except Exception as e:
+        cuda_free(cuda_ptr)
+        raise RuntimeError(f"CUDA memory initialization failed: {e}") 
     return obj, dtype, device, len(obj)
   def __repr__(self) -> str: return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
   @property
@@ -65,16 +72,14 @@ class Vector:
   @property
   def length(self) -> int: return self.__length
   def numpy(self):
-    if self.__device == "cuda":
-      # if self.__dtype in          # something needs to be done here
-      return np.array(Vector.memcpy_dtoh(self.__obj, self.__length, ))
+    if self.__device == "cuda": return np.array(Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype))
     return np.array(self.__obj)
   def __del__(self):
     if self.__device == "cuda": cuda_free(self.__obj)
   def __getitem__(self, index:int):
     if not (0 <= index < self.__length): raise IndexError(f"Index must lie from 0(included) to {self.__length - 1}(included)")
     if self.__device == "cpu": return self.__obj[index]
-    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)[index]
+    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)      # checking out something
   def __setitem__(self, index:int, value:Any): pass
   def to(self, device:str):
     if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
@@ -95,3 +100,4 @@ class Vector:
     if self.__device == "cpu": return
     self.__obj = Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)
     self.__device = "cpu"
+  def __add__(self, other): pass
