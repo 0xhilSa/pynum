@@ -213,7 +213,6 @@ static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t e
   CUDA_CHECK(cudaMemcpy(host_vec, device_ptr, length * element_size, cudaMemcpyDeviceToHost));
 
   PyObject* py_host_vec = PyList_New(length);
-  for(Py_ssize_t i = 0; i < length; i++){ printf("Host Value[%zd]: %lf, size: %ld\n", i, ((double*)host_vec)[i], sizeof(((double*)host_vec)[i])); }
   for(Py_ssize_t i = 0; i < length; i++) {
     PyObject* item;
     if(element_size == sizeof(int)) item = PyLong_FromLong(((int*)host_vec)[i]);
