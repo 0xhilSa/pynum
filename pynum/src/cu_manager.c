@@ -246,7 +246,6 @@ static PyObject* py_memcpy_dtoh_long(PyObject* self, PyObject* args){
 }
 
 static PyObject* py_memcpy_dtoh_double(PyObject* self, PyObject* args){
-  //return py_memcpy_dtoh_generic(self, args, sizeof(double), NULL);
   PyObject* py_device_ptr;
   Py_ssize_t length;
 
@@ -260,17 +259,17 @@ static PyObject* py_memcpy_dtoh_double(PyObject* self, PyObject* args){
     return NULL;
   }
 
-  // Copy data from device to host
+  // copy data from device to host
   CUDA_CHECK(cudaMemcpy(host_vec, device_ptr, length * sizeof(double), cudaMemcpyDeviceToHost));
 
-  // Create a new Python list to store the values
+  // create a new Python list to store the values
   PyObject* py_host_vec = PyList_New(length);
   if (!py_host_vec) {
     free(host_vec);
     return NULL;
   }
 
-  // Convert the data in the host vector into Python floats and add to the list
+  // convert the data in the host vector into Python floats and add to the list
   for(Py_ssize_t i = 0; i < length; i++) {
     PyObject* item = PyFloat_FromDouble(host_vec[i]);
     if (!item) {
@@ -278,11 +277,11 @@ static PyObject* py_memcpy_dtoh_double(PyObject* self, PyObject* args){
       free(host_vec);
       return NULL;
     }
-    PyList_SET_ITEM(py_host_vec, i, item);  // Don't need to increment reference count, as we're setting it
+    PyList_SET_ITEM(py_host_vec, i, item);
   }
 
-  free(host_vec);  // Free host memory
-  return py_host_vec;  // Return the Python list
+  free(host_vec);
+  return py_host_vec;
 }
 
 static PyObject* py_memcpy_dtoh_complex(PyObject* self, PyObject* args){
