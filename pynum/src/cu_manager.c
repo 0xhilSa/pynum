@@ -50,8 +50,7 @@ static PyObject* py_cuda_alloc_complex(PyObject* self, PyObject* args){
 }
 
 // generic host to device copy function
-static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t element_size, 
-                                      PyObject* (*converter)(PyObject*)) {
+static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t element_size, PyObject* (*converter)(PyObject*)) {
   PyObject* py_device_ptr;
   PyObject* py_host_vec;
 
@@ -71,7 +70,7 @@ static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t e
     return NULL;
   }
 
-  // Type-specific conversion
+  // type-specific conversion
   for(size_t i = 0; i < length; i++){
     PyObject* item = PyList_GetItem(py_host_vec, i);
     PyObject* converted = converter(item);
@@ -103,7 +102,7 @@ static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t e
   Py_RETURN_NONE;
 }
 
-// Type-specific host to device copy functions
+// type-specific host to device copy functions
 static PyObject* py_memcpy_htod_int(PyObject* self, PyObject* args){
   return py_memcpy_htod_generic(self, args, sizeof(int), PyNumber_Long);
 }
@@ -196,15 +195,8 @@ static PyObject* py_memcpy_htod_complex(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
-/*
-static PyObject* py_memcpy_htod_complex(PyObject* self, PyObject* args){
-  return py_memcpy_htod_generic(self, args, sizeof(double complex), PyNumber_Complex);
-}
-*/
-
 // generic device to host copy function
-static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t element_size,
-                                      PyObject* (*converter)(void*)){
+static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t element_size, PyObject* (*converter)(void*)){
   PyObject* py_device_ptr;
   Py_ssize_t length;
 
@@ -221,6 +213,7 @@ static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t e
   CUDA_CHECK(cudaMemcpy(host_vec, device_ptr, length * element_size, cudaMemcpyDeviceToHost));
 
   PyObject* py_host_vec = PyList_New(length);
+  for(Py_ssize_t i = 0; i < length; i++){ printf("Host Value[%zd]: %lf, size: %ld\n", i, ((double*)host_vec)[i], sizeof(((double*)host_vec)[i])); }
   for(Py_ssize_t i = 0; i < length; i++) {
     PyObject* item;
     if(element_size == sizeof(int)) item = PyLong_FromLong(((int*)host_vec)[i]);
@@ -244,7 +237,7 @@ static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t e
   return py_host_vec;
 }
 
-// Type-specific device to host copy functions
+// type-specific device to host copy functions
 static PyObject* py_memcpy_dtoh_int(PyObject* self, PyObject* args){
   return py_memcpy_dtoh_generic(self, args, sizeof(int), NULL);
 }
@@ -254,7 +247,43 @@ static PyObject* py_memcpy_dtoh_long(PyObject* self, PyObject* args){
 }
 
 static PyObject* py_memcpy_dtoh_double(PyObject* self, PyObject* args){
-  return py_memcpy_dtoh_generic(self, args, sizeof(double), NULL);
+  //return py_memcpy_dtoh_generic(self, args, sizeof(double), NULL);
+  PyObject* py_device_ptr;
+  Py_ssize_t length;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &length)) return NULL;
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  double* host_vec = (double*)malloc(length * sizeof(double));
+
+  if(!host_vec){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate host memory");
+    return NULL;
+  }
+
+  // Copy data from device to host
+  CUDA_CHECK(cudaMemcpy(host_vec, device_ptr, length * sizeof(double), cudaMemcpyDeviceToHost));
+
+  // Create a new Python list to store the values
+  PyObject* py_host_vec = PyList_New(length);
+  if (!py_host_vec) {
+    free(host_vec);
+    return NULL;
+  }
+
+  // Convert the data in the host vector into Python floats and add to the list
+  for(Py_ssize_t i = 0; i < length; i++) {
+    PyObject* item = PyFloat_FromDouble(host_vec[i]);
+    if (!item) {
+      Py_DECREF(py_host_vec);
+      free(host_vec);
+      return NULL;
+    }
+    PyList_SET_ITEM(py_host_vec, i, item);  // Don't need to increment reference count, as we're setting it
+  }
+
+  free(host_vec);  // Free host memory
+  return py_host_vec;  // Return the Python list
 }
 
 static PyObject* py_memcpy_dtoh_complex(PyObject* self, PyObject* args){
