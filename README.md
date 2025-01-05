@@ -4,7 +4,7 @@
   <img alt="pynum-logo" src="./docs/pynum.svg" width="50%" height="50%">
 </picture>
   
-<h3><i><b>a small python library for 1D and 2D arrays GPU support (WIP)</b></i></h3>
+<h3><i><b>a small python library for 1D and 2D arrays with GPU support (WIP)</b></i></h3>
 </div>
 
 ---
@@ -15,7 +15,6 @@
 
 ## Prerequisites
 Before building the library, ensure the following dependencies are installed
-- [cmake](https://cmake.org/download/)
 - [pybind11](https://pybind11.readthedocs.io/en/stable/installing.html)
 
 ## Installation
@@ -26,5 +25,5 @@ git clone https://github.com/0xhilSa/pynum.git && cd pynum
 
 2. Run the following bash script
 ```bash
-bash compile.sh
+bash install.sh
 ```
