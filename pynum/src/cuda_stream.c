@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <cuda_runtime.h>
+#include <cuComplex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
@@ -330,6 +331,302 @@ static PyObject* py_cuda_free(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
+// retrieve data from the list at a specific index for int
+static PyObject* py_get_value_int(PyObject* self, PyObject* args) {
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  int host_value;
+  CUDA_CHECK(cudaMemcpy(&host_value, (char*)device_ptr + index * sizeof(int), sizeof(int), cudaMemcpyDeviceToHost));
+  return PyLong_FromLong(host_value);
+}
+
+// retrieve data from the list at a specific index for long
+static PyObject* py_get_value_long(PyObject* self, PyObject* args) {
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  
+  long host_value;
+  CUDA_CHECK(cudaMemcpy(&host_value, (char*)device_ptr + index * sizeof(long), sizeof(long), cudaMemcpyDeviceToHost));
+  return PyLong_FromLong(host_value); 
+}
+
+// retrieve data from the list at a specific index for double
+static PyObject* py_get_value_double(PyObject* self, PyObject* args) {
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer!");
+    return NULL;
+  }
+
+  double host_value;
+  CUDA_CHECK(cudaMemcpy(&host_value, (char*)device_ptr + index * sizeof(double), sizeof(double), cudaMemcpyDeviceToHost));
+  return PyFloat_FromDouble(host_value);
+}
+
+// retrieve data from the list at a specific index for complex
+static PyObject* py_get_value_complex(PyObject* self, PyObject* args) {
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  double complex host_value;
+  CUDA_CHECK(cudaMemcpy(&host_value, (char*)device_ptr + index * sizeof(double complex), sizeof(double complex), cudaMemcpyDeviceToHost));
+  return PyComplex_FromDoubles(creal(host_value), cimag(host_value));
+}
+
+// retrieve data from the list within the given range and steps for int
+static PyObject* py_get_slice_int(PyObject* self, PyObject* args){
+  void* device_ptr;
+  size_t start, stop, steps;
+
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(start >= stop){
+    PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
+    return NULL;
+  }
+
+  if(steps == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
+    return NULL;
+  }
+
+  size_t num_elements = (stop - start + steps - 1) / steps;
+
+  PyObject* py_list = PyList_New(num_elements);
+  if(!py_list){
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
+    return NULL;
+  }
+
+  for(size_t i = 0, current = start; i < num_elements; ++i, current += steps){
+    int value;
+    CUDA_CHECK(cudaMemcpy(&value, (char*)device_ptr + current * sizeof(int), sizeof(int), cudaMemcpyDeviceToHost));
+    PyList_SetItem(py_list, i, PyLong_FromLong(value));
+  }
+  return py_list;
+}
+
+// retrieve data from the list within the given range and steps for long
+static PyObject* py_get_slice_long(PyObject* self, PyObject* args){
+  void* device_ptr;
+  size_t start, stop, steps;
+
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(start >= stop){
+    PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
+    return NULL;
+  }
+
+  if(steps == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
+    return NULL;
+  }
+
+  size_t num_elements = (stop - start + steps - 1) / steps;
+
+  PyObject* py_list = PyList_New(num_elements);
+  if(!py_list){
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
+    return NULL;
+  }
+
+  for(size_t i = 0, current = start; i < num_elements; ++i, current += steps){
+    long value;
+    CUDA_CHECK(cudaMemcpy(&value, (char*)device_ptr + current * sizeof(long), sizeof(long), cudaMemcpyDeviceToHost));
+    PyList_SetItem(py_list, i, PyLong_FromLong(value));
+  }
+  return py_list;
+}
+
+// retrieve data from the list within the given range and steps for double
+static PyObject* py_get_slice_double(PyObject* self, PyObject* args){
+  void* device_ptr;
+  size_t start, stop, steps;
+
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(start >= stop){
+    PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
+    return NULL;
+  }
+
+  if(steps == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
+    return NULL;
+  }
+
+  size_t num_elements = (stop - start + steps - 1) / steps;
+
+  PyObject* py_list = PyList_New(num_elements);
+  if(!py_list){
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
+    return NULL;
+  }
+
+  for(size_t i = 0, current = start; i < num_elements; ++i, current += steps){
+    long value;
+    CUDA_CHECK(cudaMemcpy(&value, (char*)device_ptr + current * sizeof(double), sizeof(double), cudaMemcpyDeviceToHost));
+    PyList_SetItem(py_list, i, PyLong_FromLong(value));
+  }
+  return py_list;
+}
+
+// retrieve data from the list within the given raneg and steps for complex
+static PyObject* py_get_slice_complex(PyObject* self, PyObject* args) {
+  void* device_ptr;
+  size_t start, stop, steps;
+
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+
+  if(start >= stop){
+    PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index.");
+    return NULL;
+  }
+
+  if(steps == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0.");
+    return NULL;
+  }
+
+  size_t num_elements = (stop - start + steps - 1) / steps;
+
+  PyObject* py_list = PyList_New(num_elements);
+  if(!py_list){
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list.");
+    return NULL;
+  }
+
+  for(size_t i = 0, current = start; i < num_elements; ++i, current += steps){
+    double complex value;
+    CUDA_CHECK(cudaMemcpy(&value, (char*)device_ptr + current * sizeof(double complex), sizeof(double complex), cudaMemcpyDeviceToHost));
+    PyObject* py_value = PyComplex_FromDoubles(creal(value), cimag(value));
+    PyList_SetItem(py_list, i, py_value);
+  }
+  return py_list;
+}
+
+
+// problems starts form here
+// set a data from a list at a specific index for int
+static PyObject* py_set_value_int(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+  int value;
+
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  int* device_ptr = (int*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(int), cudaMemcpyHostToDevice));
+  Py_RETURN_NONE;
+}
+
+// set a data from a list at a specific index for long
+static PyObject* py_set_value_long(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+  long value;
+
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(long), cudaMemcpyHostToDevice));
+  Py_RETURN_NONE;
+}
+
+// set a data from a list at a specific index for double
+static PyObject* py_set_value_double(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+  double value;
+
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  double* device_ptr = (double*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(double), cudaMemcpyHostToDevice));
+  Py_RETURN_NONE;
+}
+
+// set a data from a list at a specific index for complex
+static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+  PyObject* py_value;
+
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &py_value)){ return NULL; }
+  if(!PyComplex_Check(py_value)){
+    PyErr_SetString(PyExc_TypeError, "Value must be complex number");
+    return NULL;
+  }
+
+  double real = PyComplex_RealAsDouble(py_value);
+  double imag = PyComplex_ImagAsDouble(py_value);
+  double complex value = real + imag * I;
+
+  double complex* device_ptr = (double complex*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(double complex), cudaMemcpyHostToHost));
+  Py_RETURN_NONE;
+}
+// problems ends from here
+
+
+
+// set value in list within the certain range for complex
+static PyObject* py_set_slice_int(PyObject* self, PyObject* args){
+}
+
+// set value in list within the certain range for long
+static PyObject* py_set_slice_long(PyObject* self, PyObject* args){
+}
+
+// set value in list within the certain range for double
+static PyObject* py_set_slice_double(PyObject* self, PyObject* args){
+}
+
+// set value in list within the certain range for long
+static PyObject* py_set_slice_complex(PyObject* self, PyObject* args){
+}
+
 // memory query function remains unchanged
 static PyObject* py_cuda_query_free_memory(PyObject* self, PyObject* args){
   size_t free_mem = 0, total_mem = 0;
@@ -357,6 +654,18 @@ static PyMethodDef CuManagerMethods[] = {
   {"memcpy_dtod_complex", py_memcpy_dtod_complex, METH_VARARGS, "Copy complex array between device locations"},
   {"cuda_free", py_cuda_free, METH_VARARGS, "Free CUDA device memory"},
   {"cuda_query_free_memory", py_cuda_query_free_memory, METH_NOARGS, "Query available CUDA device memory"},
+  {"get_value_int", py_get_value_int, METH_VARARGS, "Get an int value from the device at a specific index"},
+  {"get_value_long", py_get_value_long, METH_VARARGS, "Get a long value from the device at a specific index"},
+  {"get_value_double", py_get_value_double, METH_VARARGS, "Get a double value from the device at a specific index"},
+  {"get_value_complex", py_get_value_complex, METH_VARARGS, "Get a complex value from the device at a specific index"},
+  {"get_slice_int", py_get_slice_int, METH_VARARGS, "Get int slice from device memory"},
+  {"get_slice_long", py_get_slice_long, METH_VARARGS, "Get long slice from device memory"},
+  {"get_slice_double", py_get_slice_double, METH_VARARGS, "Get double slice from device memory"},
+  {"get_slice_complex", py_get_slice_complex, METH_VARARGS, "Get complex slice from device memory"},
+  {"set_value_int", py_set_value_int, METH_VARARGS, "Set an integer value in device memory"},
+  {"set_value_long", py_set_value_long, METH_VARARGS, "Set a long value in device memory"},
+  {"set_value_double", py_set_value_double, METH_VARARGS, "Set a double value in device memory"},
+  {"set_value_complex", py_set_value_complex, METH_VARARGS, "Set a complex value in device memory"},
   {NULL, NULL, 0, NULL}
 };
 
