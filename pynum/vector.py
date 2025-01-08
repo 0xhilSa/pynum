@@ -6,6 +6,8 @@ from .src.cuda_stream import (
   memcpy_htod_int, memcpy_htod_long, memcpy_htod_double, memcpy_htod_complex,
   memcpy_dtoh_int, memcpy_dtoh_long, memcpy_dtoh_double, memcpy_dtoh_complex,
   get_value_int, get_value_long, get_value_double, get_value_complex,
+  get_slice_int, get_slice_long, get_slice_double, get_slice_complex,
+  set_value_int, set_value_long, set_value_double, set_value_complex,
   cuda_free, cuda_query_free_memory
 )
 from .ops import Ops, GroupOp, ops_mapping
@@ -39,6 +41,16 @@ class Vector:
     if dtype in FLOATING: return get_value_double(ptr, index)
     elif dtype in INTEGER: return get_value_long(ptr, index)
     elif dtype in COMPLEX: return get_value_complex(ptr, index)
+  @staticmethod
+  def get_slice_value(ptr, start:int, stop:int, step:int, dtype:Type):
+    if dtype in FLOATING: return get_slice_double(ptr, start, stop, step)
+    elif dtype in INTEGER: return get_slice_long(ptr, start, stop, step)
+    elif dtype in COMPLEX: return get_slice_complex(ptr, start, stop, step)
+  @staticmethod
+  def set_value(ptr, index:int, value, dtype:Type):
+    if dtype in FLOATING: set_value_double(ptr, index, value)
+    if dtype in INTEGER: set_value_long(ptr, index, value)
+    if dtype in COMPLEX: set_value_complex(ptr, index, value)
   # @staticmethod
   # def get_slice(ptr, start:int=0, end:int=)
   @staticmethod
@@ -98,17 +110,16 @@ class Vector:
       if stop is None: stop = self.__length if steps > 0 else -1
       if start < 0: start += self.__length
       if stop < 0: stop += self.__length
-      indices = list(range(start,stop,steps))
-      length = len(indices)
-      if self.__device == "cuda":
-        data = []
-        for i in indices:
-          if 0 <= i < self.__length: data.append(Vector.get_value(self.__obj, i, self.__dtype))
-          else: raise IndexError("Slice index out of range")
-      else: data = [self.__dtype(self.__obj)[i] for i in indices]
-      return Vector(data, dtype=self.__dtype, device="cpu" if self.__device == "cuda" else self.__device)
+      if self.__device == "cuda": return Vector(Vector.get_slice_value(self.__obj, start, stop, steps, self.__dtype), dtype=self.__dtype, device="cuda")
+      elif self.__device == "cpu": return Vector(self.__obj[index], dtype=self.__dtype, device=self.__device)
     else: raise TypeError("Invalid index type. Must be an int or slice")
-  def __setitem__(self, index:int, value:Any):pass
+  def __setitem__(self, index:Union[int,slice], value:Any):
+    if self.__const: raise RuntimeError("cannot make changes on immutable Vector")
+    if isinstance(index,int):
+      if index < 0: index += self.__length
+      if not (0 <= index < self.__length): raise IndexError("Index out of range")
+      if self.__device == "cuda": Vector.set_value(self.__obj, index, value, self.__dtype)    # It sets the value's pointer instead
+      elif self.__device == "cpu": self.__obj[index] = value
   def to(self, device:str):
     if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
     if device.lower() == self.__device: return
