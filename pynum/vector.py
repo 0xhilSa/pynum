@@ -5,6 +5,7 @@ from .src.cuda_stream import (
   cuda_alloc_int, cuda_alloc_long, cuda_alloc_double, cuda_alloc_complex,
   memcpy_htod_int, memcpy_htod_long, memcpy_htod_double, memcpy_htod_complex,
   memcpy_dtoh_int, memcpy_dtoh_long, memcpy_dtoh_double, memcpy_dtoh_complex,
+  get_value_int, get_value_long, get_value_double, get_value_complex,
   cuda_free, cuda_query_free_memory
 )
 from .ops import Ops, GroupOp, ops_mapping
@@ -34,7 +35,14 @@ class Vector:
     elif dtype in INTEGER: return memcpy_dtoh_long(ptr, length)
     elif dtype in COMPLEX: return memcpy_dtoh_complex(ptr, length)
   @staticmethod
-  def free(ptr): cuda_fee(ptr)
+  def get_value(ptr, index:int, dtype:Type):
+    if dtype in FLOATING: return get_value_double(ptr, index)
+    elif dtype in INTEGER: return get_value_long(ptr, index)
+    elif dtype in COMPLEX: return get_value_complex(ptr, index)
+  # @staticmethod
+  # def get_slice(ptr, start:int=0, end:int=)
+  @staticmethod
+  def free(ptr): cuda_free(ptr)
   def __init__(
     self,
     obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]],
@@ -76,11 +84,31 @@ class Vector:
     return np.array(self.__obj)
   def __del__(self):
     if self.__device == "cuda": cuda_free(self.__obj)
-  def __getitem__(self, index:int):
-    if not (0 <= index < self.__length): raise IndexError(f"Index must lie from 0(included) to {self.__length - 1}(included)")
-    if self.__device == "cpu": return self.__obj[index]
-    elif self.__device == "cuda": return Vector.memcpy_dtoh(self.__obj, self.__length, self.__dtype)[0]
-  def __setitem__(self, index:int, value:Any): pass
+  def __getitem__(self, index:Union[int,slice]):
+    if isinstance(index,int):
+      if index < 0: index += self.__length
+      if not (0 <= index < self.__length): raise IndexError("Index out of range")
+      if self.__device == "cuda": return Vector.get_value(self.__obj, index, self.__dtype)
+      else: return self.__dtype(self.__obj[index])
+    elif isinstance(index,slice):
+      start, stop, steps = index.start, index.stop, index.step
+      steps = steps or 1
+      if steps == 0: raise ValueError("Slice step must be greater than 0")
+      if start is None: start = 0 if steps > 0 else self.__length - 1
+      if stop is None: stop = self.__length if steps > 0 else -1
+      if start < 0: start += self.__length
+      if stop < 0: stop += self.__length
+      indices = list(range(start,stop,steps))
+      length = len(indices)
+      if self.__device == "cuda":
+        data = []
+        for i in indices:
+          if 0 <= i < self.__length: data.append(Vector.get_value(self.__obj, i, self.__dtype))
+          else: raise IndexError("Slice index out of range")
+      else: data = [self.__dtype(self.__obj)[i] for i in indices]
+      return Vector(data, dtype=self.__dtype, device="cpu" if self.__device == "cuda" else self.__device)
+    else: raise TypeError("Invalid index type. Must be an int or slice")
+  def __setitem__(self, index:int, value:Any):pass
   def to(self, device:str):
     if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
     if device.lower() == self.__device: return
