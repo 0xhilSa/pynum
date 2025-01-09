@@ -2,17 +2,6 @@ from __future__ import annotations
 from typing import List, Any, Type, Tuple, Optional, Union
 import numpy as np
 from .cuda import *
-"""
-from .src.cuda_stream import (
-  cuda_alloc_int, cuda_alloc_long, cuda_alloc_double, cuda_alloc_complex,
-  memcpy_htod_int, memcpy_htod_long, memcpy_htod_double, memcpy_htod_complex,
-  memcpy_dtoh_int, memcpy_dtoh_long, memcpy_dtoh_double, memcpy_dtoh_complex,
-  get_value_int, get_value_long, get_value_double, get_value_complex,
-  get_slice_int, get_slice_long, get_slice_double, get_slice_complex,
-  set_value_int, set_value_long, set_value_double, set_value_complex,
-  set_slice_int, set_slice_long,
-  cuda_free, cuda_query_free_memory
-)"""
 from .ops import Ops, GroupOp, ops_mapping
 
 
