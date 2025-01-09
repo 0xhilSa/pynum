@@ -610,18 +610,115 @@ static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
 
 // set value in list within the certain range for complex
 static PyObject* py_set_slice_int(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t start, stop, step;
+  PyObject* py_values;
+
+  if(!PyArg_ParseTuple(args, "OnnO", &py_device_ptr, &start, &stop, &step, &py_values)){ return NULL; }
+
+  int* device_ptr = (int*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  if(!PyList_Check(py_values)){
+    PyErr_SetString(PyExc_ValueError, "Values must be a list of integers");
+    return NULL;
+  }
+
+  if(step == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
+    return NULL;
+  }
+
+  Py_ssize_t num_elements = (stop - start + step  - 1) / step;
+  int* host_values = (int*)malloc(num_elements * sizeof(int));
+  if(!host_values){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for vvalues");
+    return NULL;
+  }
+
+  for(Py_ssize_t i = 0; i < num_elements; ++i){
+    PyObject* py_value = PyList_GetItem(py_values, i * step);
+    if(!PyLong_Check(py_value)){
+      free(host_values);
+      PyErr_SetString(PyExc_ValueError, "All values must be integers");
+      return NULL;
+    }
+    host_values[i] = (int)PyLong_AsLong(py_value);
+  }
+
+  CUDA_CHECK(cudaMemcpy(device_ptr + start, host_values, num_elements * sizeof(int), cudaMemcpyHostToDevice));
+  free(host_values);
+  Py_RETURN_NONE;
 }
 
 // set value in list within the certain range for long
-static PyObject* py_set_slice_long(PyObject* self, PyObject* args){
+static PyObject* py_set_slice_long(PyObject* self, PyObject* args) {
+  PyObject* py_device_ptr;
+  Py_ssize_t start, stop, step;
+  PyObject* py_values;
+
+  if(!PyArg_ParseTuple(args, "OnnnO", &py_device_ptr, &start, &stop, &step, &py_values)){ return NULL; }
+
+  long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  if(step <= 0){
+    PyErr_SetString(PyExc_ValueError, "Step must be greater than 0");
+    return NULL;
+  }
+
+  if(!PyList_Check(py_values)){
+    PyErr_SetString(PyExc_ValueError, "Values must be a list");
+    return NULL;
+  }
+
+  Py_ssize_t num_elements = (stop - start + step - 1) / step;
+  if(PyList_Size(py_values) != num_elements){
+    PyErr_SetString(PyExc_ValueError, "Size of values list does not match the slice length");
+    return NULL;
+  }
+
+  long* host_values = (long*)malloc(num_elements * sizeof(long));
+  if(!host_values){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for host values");
+    return NULL;
+  }
+
+  for(Py_ssize_t i = 0; i < num_elements; ++i){
+    PyObject* py_value = PyList_GetItem(py_values, i);
+    if(!PyLong_Check(py_value)){
+      free(host_values);
+      PyErr_SetString(PyExc_ValueError, "All values must be integers");
+      return NULL;
+    }
+    host_values[i] = (long)PyLong_AsLong(py_value);
+  }
+
+  cudaError_t err = cudaMemcpy(device_ptr + start, host_values, num_elements * sizeof(long), cudaMemcpyHostToDevice);
+  free(host_values);
+
+  if(err != cudaSuccess){
+    PyErr_SetString(PyExc_RuntimeError, cudaGetErrorString(err));
+    return NULL;
+  }
+
+  Py_RETURN_NONE;
 }
 
 // set value in list within the certain range for double
 static PyObject* py_set_slice_double(PyObject* self, PyObject* args){
+  Py_RETURN_NONE;
 }
 
 // set value in list within the certain range for long
 static PyObject* py_set_slice_complex(PyObject* self, PyObject* args){
+  Py_RETURN_NONE;
 }
 
 // memory query function remains unchanged
@@ -663,6 +760,8 @@ static PyMethodDef CuManagerMethods[] = {
   {"set_value_long", py_set_value_long, METH_VARARGS, "Set a long value in device memory"},
   {"set_value_double", py_set_value_double, METH_VARARGS, "Set a double value in device memory"},
   {"set_value_complex", py_set_value_complex, METH_VARARGS, "Set a complex value in device memory"},
+  {"set_slice_int", py_set_slice_int, METH_VARARGS, "Set int sliced from device memory"},
+  {"set_slice_long", py_set_slice_long, METH_VARARGS, "Set long sliced from device memory"},
   {NULL, NULL, 0, NULL}
 };
 
