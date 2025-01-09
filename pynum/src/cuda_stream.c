@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <cuda_runtime.h>
-#include <cuComplex.h>
+#include <complex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
@@ -534,7 +534,6 @@ static PyObject* py_get_slice_complex(PyObject* self, PyObject* args) {
 }
 
 
-// problems starts form here
 // set a data from a list at a specific index for int
 static PyObject* py_set_value_int(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
@@ -557,7 +556,7 @@ static PyObject* py_set_value_long(PyObject* self, PyObject* args){
   Py_ssize_t index;
   long value;
 
-  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Onl", &py_device_ptr, &index, &value)){ return NULL; }
   long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
@@ -573,7 +572,7 @@ static PyObject* py_set_value_double(PyObject* self, PyObject* args){
   Py_ssize_t index;
   double value;
 
-  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Ond", &py_device_ptr, &index, &value)){ return NULL; }
   double* device_ptr = (double*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
@@ -589,7 +588,7 @@ static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
   Py_ssize_t index;
   PyObject* py_value;
 
-  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &py_value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "OnO", &py_device_ptr, &index, &py_value)){ return NULL; }
   if(!PyComplex_Check(py_value)){
     PyErr_SetString(PyExc_TypeError, "Value must be complex number");
     return NULL;
@@ -604,11 +603,9 @@ static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
     return NULL;
   }
-  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(double complex), cudaMemcpyHostToHost));
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(double complex), cudaMemcpyHostToDevice));
   Py_RETURN_NONE;
 }
-// problems ends from here
-
 
 
 // set value in list within the certain range for complex
