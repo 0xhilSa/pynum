@@ -120,6 +120,7 @@ class Vector:
       if not (0 <= index < self.__length): raise IndexError("Index out of range")
       if self.__device == "cuda": Vector.set_value(self.__obj, index, value, self.__dtype)    # It sets the value's pointer instead
       elif self.__device == "cpu": self.__obj[index] = value
+    elif isinstance(index,slice): pass
   def to(self, device:str):
     if device.lower() not in DEVICE_SUPPORTED: raise ValueError("Unsupported device '{device}'")
     if device.lower() == self.__device: return

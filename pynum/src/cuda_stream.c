@@ -533,7 +533,6 @@ static PyObject* py_get_slice_complex(PyObject* self, PyObject* args) {
   return py_list;
 }
 
-
 // set a data from a list at a specific index for int
 static PyObject* py_set_value_int(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
