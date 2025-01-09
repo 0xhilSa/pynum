@@ -1,3 +1,8 @@
+"""
+these functions are written in C and
+defined at './pynum/src/cuda_stream.c'
+"""
+
 # allocators for different data types
 from .src.cuda_stream import cuda_alloc_int
 from .src.cuda_stream import cuda_alloc_long
@@ -28,12 +33,13 @@ from .src.cuda_stream import get_slice_long
 from .src.cuda_stream import get_slice_double
 from .src.cuda_stream import get_slice_complex
 
-# setters
+# setters(index)
 from .src.cuda_stream import set_value_int
 from .src.cuda_stream import set_value_long
 from .src.cuda_stream import set_value_double
 from .src.cuda_stream import set_value_complex
 
+# setters(slice)
 from .src.cuda_stream import set_slice_int
 from .src.cuda_stream import set_slice_long
 #from .src.cuda_stream import set_slice_double
