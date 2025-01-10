@@ -336,7 +336,7 @@ static PyObject* py_get_value_int(PyObject* self, PyObject* args) {
   PyObject* py_device_ptr;
   Py_ssize_t index;
 
-  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)) return NULL;
 
   void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
@@ -354,7 +354,7 @@ static PyObject* py_get_value_long(PyObject* self, PyObject* args) {
   PyObject* py_device_ptr;
   Py_ssize_t index;
 
-  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)) return NULL;
 
   void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
@@ -372,7 +372,7 @@ static PyObject* py_get_value_double(PyObject* self, PyObject* args) {
   PyObject* py_device_ptr;
   Py_ssize_t index;
 
-  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)) return NULL;
 
   void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
@@ -390,7 +390,7 @@ static PyObject* py_get_value_complex(PyObject* self, PyObject* args) {
   PyObject* py_device_ptr;
   Py_ssize_t index;
 
-  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)) return NULL;
 
   void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
@@ -408,7 +408,7 @@ static PyObject* py_get_slice_int(PyObject* self, PyObject* args){
   void* device_ptr;
   size_t start, stop, steps;
 
-  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)) return NULL;
   if(start >= stop){
     PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
     return NULL;
@@ -440,7 +440,7 @@ static PyObject* py_get_slice_long(PyObject* self, PyObject* args){
   void* device_ptr;
   size_t start, stop, steps;
 
-  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)) return NULL;
   if(start >= stop){
     PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
     return NULL;
@@ -472,7 +472,7 @@ static PyObject* py_get_slice_double(PyObject* self, PyObject* args){
   void* device_ptr;
   size_t start, stop, steps;
 
-  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)) return NULL;
   if(start >= stop){
     PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
     return NULL;
@@ -504,7 +504,7 @@ static PyObject* py_get_slice_complex(PyObject* self, PyObject* args) {
   void* device_ptr;
   size_t start, stop, steps;
 
-  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)) return NULL;
 
   if(start >= stop){
     PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index.");
@@ -539,7 +539,7 @@ static PyObject* py_set_value_int(PyObject* self, PyObject* args){
   Py_ssize_t index;
   int value;
 
-  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)) return NULL;
   int* device_ptr = (int*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
@@ -555,7 +555,7 @@ static PyObject* py_set_value_long(PyObject* self, PyObject* args){
   Py_ssize_t index;
   long value;
 
-  if(!PyArg_ParseTuple(args, "Onl", &py_device_ptr, &index, &value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Onl", &py_device_ptr, &index, &value)) return NULL;
   long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
@@ -571,7 +571,7 @@ static PyObject* py_set_value_double(PyObject* self, PyObject* args){
   Py_ssize_t index;
   double value;
 
-  if(!PyArg_ParseTuple(args, "Ond", &py_device_ptr, &index, &value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "Ond", &py_device_ptr, &index, &value)) return NULL;
   double* device_ptr = (double*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
     PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
@@ -587,7 +587,7 @@ static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
   Py_ssize_t index;
   PyObject* py_value;
 
-  if(!PyArg_ParseTuple(args, "OnO", &py_device_ptr, &index, &py_value)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "OnO", &py_device_ptr, &index, &py_value)) return NULL;
   if(!PyComplex_Check(py_value)){
     PyErr_SetString(PyExc_TypeError, "Value must be complex number");
     return NULL;
@@ -613,7 +613,7 @@ static PyObject* py_set_slice_int(PyObject* self, PyObject* args){
   Py_ssize_t start, stop, step;
   PyObject* py_values;
 
-  if(!PyArg_ParseTuple(args, "OnnO", &py_device_ptr, &start, &stop, &step, &py_values)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "OnnO", &py_device_ptr, &start, &stop, &step, &py_values)) return NULL;
 
   int* device_ptr = (int*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
@@ -659,7 +659,7 @@ static PyObject* py_set_slice_long(PyObject* self, PyObject* args) {
   Py_ssize_t start, stop, step;
   PyObject* py_values;
 
-  if(!PyArg_ParseTuple(args, "OnnnO", &py_device_ptr, &start, &stop, &step, &py_values)){ return NULL; }
+  if(!PyArg_ParseTuple(args, "OnnnO", &py_device_ptr, &start, &stop, &step, &py_values)) return NULL;
 
   long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr == NULL){
