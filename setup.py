@@ -15,7 +15,7 @@ setup(
   version = "0.0.1",
   url = "https://github.com/0xhilSa/pynum",
   license = "MIT",
-  packages = find_packages(include=['pynum', 'pynum.src']),
+  packages = find_packages(include=["pynum", "pynum.src"]),
   ext_modules = [module],
   package_data= {"pynum.src": ["*.so"]},
   author = "Sahil Rajwar",
