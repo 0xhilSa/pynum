@@ -15,9 +15,9 @@ ALL = FLOATING + INTEGER + COMPLEX
 class Vector:
   @staticmethod
   def cuda_alloc(obj:List[Any], dtype:Type):
-    if dtype in FLOATING: return cuda_alloc_double(obj)
-    elif dtype in INTEGER: return cuda_alloc_long(obj)
-    elif dtype in COMPLEX: return cuda_alloc_complex(obj)
+    if dtype in FLOATING: return alloc_double(obj)
+    elif dtype in INTEGER: return alloc_long(obj)
+    elif dtype in COMPLEX: return alloc_complex(obj)
   @staticmethod
   def memcpy_htod(ptr, obj:List[Any], dtype:Type):
     if dtype in FLOATING: return memcpy_htod_double(ptr, obj)
@@ -41,13 +41,10 @@ class Vector:
   @staticmethod
   def set_value(ptr, index:int, value, dtype:Type):
     if dtype in FLOATING: set_value_double(ptr, index, value)
-    if dtype in INTEGER: set_value_long(ptr, index, value)
-    if dtype in COMPLEX: set_value_complex(ptr, index, value)
+    elif dtype in INTEGER: set_value_long(ptr, index, value)
+    elif dtype in COMPLEX: set_value_complex(ptr, index, value)
   @staticmethod
-  def set_slice_value(ptr, start:int, stop:int, step:int, value, dtype:Type):
-    if dtype is INTEGER: set_slice_long(ptr, start, stop, step, value)
-  @staticmethod
-  def free(ptr): cuda_free(ptr)
+  def free(ptr): free(ptr)
   def __init__(
     self,
     obj:List[Union[int,float,complex,np.integer,np.floating,np.complex128]],
@@ -111,8 +108,24 @@ class Vector:
     if isinstance(index,int):
       if index < 0: index += self.__length
       if not (0 <= index < self.__length): raise IndexError("Index out of range")
-      if self.__device == "cuda": Vector.set_value(self.__obj, index, value, self.__dtype)    # It sets the value's pointer instead
-      elif self.__device == "cpu": self.__obj[index] = value
+      if self.__device == "CUDA": Vector.set_value(self.__obj, index, value, self.__dtype)
+      elif self.__device == "CPU": self.__obj[index] = value
+    elif isinstance(index, slice):
+      if not isinstance(value, (list, tuple, np.ndarray)): raise TypeError("Assigned value must be a list, tuple, or numpy array.")
+      start, stop, step = index.start, index.stop, index.step
+      step = step or 1
+      start = start if start is not None else (0 if step > 0 else self.__length - 1)
+      stop = stop if stop is not None else (self.__length if step > 0 else -1)
+      start = start + self.__length if start < 0 else start
+      stop = stop + self.__length if stop < 0 else stop
+      slice_length = len(range(start, stop, step))
+      if len(value) != slice_length: raise ValueError(f"Length of value ({len(value)}) does not match the slice length ({slice_length})")
+      indices = range(start, stop, step)
+      if self.__device == "CUDA":
+          for idx, val in zip(indices, value): Vector.set_value(self.__obj, idx, val, self.__dtype)
+      elif self.__device == "CPU":
+          for idx, val in zip(indices, value): self.__obj[idx] = val
+    else: raise TypeError("Invalid index type. Must be an int or slice")
   def to(self, device:str):
     if device.upper() not in DEVICE_SUPPORTED: raise ValueError(f"Unsupported device '{device}'")
     if device.upper() == self.__device: return
