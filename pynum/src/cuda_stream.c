@@ -15,6 +15,8 @@
     } \
   }while (0)
 
+
+
 // generic allocation function
 static PyObject* py_cuda_alloc_generic(PyObject* self, PyObject* args, size_t element_size){
   PyObject* py_host_vec;
@@ -34,6 +36,10 @@ static PyObject* py_cuda_alloc_generic(PyObject* self, PyObject* args, size_t el
 }
 
 // type-specific allocation functions
+static PyObject* py_cuda_alloc_short(PyObject* self, PyObject* args){
+  return py_cuda_alloc_generic(self, args, sizeof(short));
+}
+
 static PyObject* py_cuda_alloc_int(PyObject* self, PyObject* args){
   return py_cuda_alloc_generic(self, args, sizeof(int));
 }
@@ -79,13 +85,12 @@ static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t e
       free(host_vec);
       return NULL;
     }
-    
-    if(element_size == sizeof(int))
-      ((int*)host_vec)[i] = (int)PyLong_AsLong(converted);
-    else if(element_size == sizeof(long))
-      ((long*)host_vec)[i] = PyLong_AsLong(converted);
-    else if(element_size == sizeof(double))
-      ((double*)host_vec)[i] = PyFloat_AsDouble(converted);
+
+    if(element_size == sizeof(short)) ((short*)host_vec)[i] = (short)PyLong_AsLong(converted);
+    else if(element_size == sizeof(int)) ((int*)host_vec)[i] = (int)PyLong_AsLong(converted);
+    else if(element_size == sizeof(long)) ((long*)host_vec)[i] = PyLong_AsLong(converted);
+    else if(element_size == sizeof(float)) ((float*)host_vec)[i] = PyLong_AsLong(converted);
+    else if(element_size == sizeof(double)) ((double*)host_vec)[i] = PyFloat_AsDouble(converted);
     else if(element_size == sizeof(double complex)){
       PyObject* real = PyObject_GetAttrString(item, "real");
       PyObject* imag = PyObject_GetAttrString(item, "imag");
@@ -104,6 +109,10 @@ static PyObject* py_memcpy_htod_generic(PyObject* self, PyObject* args, size_t e
 }
 
 // type-specific host to device copy functions
+static PyObject* py_memcpy_htod_short(PyObject* self, PyObject* args){
+  return py_memcpy_htod_generic(self, args, sizeof(short), PyNumber_Long);
+}
+
 static PyObject* py_memcpy_htod_int(PyObject* self, PyObject* args){
   return py_memcpy_htod_generic(self, args, sizeof(int), PyNumber_Long);
 }
@@ -196,6 +205,96 @@ static PyObject* py_memcpy_htod_complex(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
+static PyObject* py_memcpy_htoh_generic(PyObject* self, PyObject* args, size_t element_size) {
+  PyObject* py_src_vec;
+  PyObject* py_dst_vec;
+
+  if(!PyArg_ParseTuple(args, "OO", &py_src_vec, &py_dst_vec)) return NULL;
+  if(!PyList_Check(py_src_vec) || !PyList_Check(py_dst_vec)){
+    PyErr_SetString(PyExc_TypeError, "Both arguments must be lists");
+    return NULL;
+  }
+
+  size_t src_length = PyList_Size(py_src_vec);
+  size_t dst_length = PyList_Size(py_dst_vec);
+
+  if(src_length != dst_length){
+    PyErr_SetString(PyExc_ValueError, "Source and destination lists must have the same length");
+    return NULL;
+  }
+
+  void* src_data = malloc(src_length * element_size);
+  void* dst_data = malloc(dst_length * element_size);
+
+  if(!src_data || !dst_data){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for source or destination vectors");
+    return NULL;
+  }
+
+  for(size_t i = 0; i < src_length; i++){
+    PyObject* item = PyList_GetItem(py_src_vec, i);
+    if(element_size == sizeof(short)) ((short*)src_data)[i] = (short)PyLong_AsLong(item);
+    else if(element_size == sizeof(int)) ((int*)src_data)[i] = (int)PyLong_AsLong(item);
+    else if(element_size == sizeof(long)) ((long*)src_data)[i] = PyLong_AsLong(item);
+    else if(element_size == sizeof(double)) ((double*)src_data)[i] = PyFloat_AsDouble(item);
+    else if(element_size == sizeof(double complex)){
+      PyObject* real = PyObject_GetAttrString(item, "real");
+      PyObject* imag = PyObject_GetAttrString(item, "imag");
+      ((double complex*)src_data)[i] = PyFloat_AsDouble(real) + PyFloat_AsDouble(imag) * I;
+      Py_DECREF(real);
+      Py_DECREF(imag);
+    }
+  }
+
+  memcpy(dst_data, src_data, src_length * element_size);
+  for(size_t i = 0; i < dst_length; i++){
+    PyObject* item = NULL;
+    if(element_size == sizeof(short)) item = PyLong_FromLong(((short*)dst_data)[i]);
+    else if(element_size == sizeof(int)) item = PyLong_FromLong(((int*)dst_data)[i]);
+    else if(element_size == sizeof(long)) item = PyLong_FromLong(((long*)dst_data)[i]);
+    else if(element_size == sizeof(double)) item = PyFloat_FromDouble(((double*)dst_data)[i]);
+    else if (element_size == sizeof(double complex)){
+      double complex value = ((double complex*)dst_data)[i];
+      item = PyComplex_FromDoubles(creal(value), cimag(value));
+    }
+
+    if(!item){
+      PyErr_SetString(PyExc_RuntimeError, "Failed to convert value to Python object");
+      free(src_data);
+      free(dst_data);
+      return NULL;
+    }
+
+    PyList_SetItem(py_dst_vec, i, item);
+  }
+
+  free(src_data);
+  free(dst_data);
+
+  Py_RETURN_NONE;
+}
+
+// Type-specific htoh functions
+static PyObject* py_memcpy_htoh_short(PyObject* self, PyObject* args){
+  return py_memcpy_htoh_generic(self, args, sizeof(short));
+}
+
+static PyObject* py_memcpy_htoh_int(PyObject* self, PyObject* args){
+  return py_memcpy_htoh_generic(self, args, sizeof(int));
+}
+
+static PyObject* py_memcpy_htoh_long(PyObject* self, PyObject* args){
+  return py_memcpy_htoh_generic(self, args, sizeof(long));
+}
+
+static PyObject* py_memcpy_htoh_double(PyObject* self, PyObject* args){
+  return py_memcpy_htoh_generic(self, args, sizeof(double));
+}
+
+static PyObject* py_memcpy_htoh_complex(PyObject* self, PyObject* args){
+  return py_memcpy_htoh_generic(self, args, sizeof(double complex));
+}
+
 // generic device to host copy function
 static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t element_size, PyObject* (*converter)(void*)){
   PyObject* py_device_ptr;
@@ -216,7 +315,8 @@ static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t e
   PyObject* py_host_vec = PyList_New(length);
   for(Py_ssize_t i = 0; i < length; i++) {
     PyObject* item;
-    if(element_size == sizeof(int)) item = PyLong_FromLong(((int*)host_vec)[i]);
+    if(element_size == sizeof(short)) item = PyLong_FromLong(((short*)host_vec)[i]);
+    else if(element_size == sizeof(int)) item = PyLong_FromLong(((int*)host_vec)[i]);
     else if(element_size == sizeof(long))  item = PyLong_FromLong(((long*)host_vec)[i]);
     else if(element_size == sizeof(double)) item = PyFloat_FromDouble(((double*)host_vec)[i]);
     else if(element_size == sizeof(double complex)){
@@ -238,6 +338,10 @@ static PyObject* py_memcpy_dtoh_generic(PyObject* self, PyObject* args, size_t e
 }
 
 // type-specific device to host copy functions
+static PyObject* py_memcpy_dtoh_short(PyObject* self, PyObject* args){
+  return py_memcpy_dtoh_generic(self, args, sizeof(short), NULL);
+}
+
 static PyObject* py_memcpy_dtoh_int(PyObject* self, PyObject* args){
   return py_memcpy_dtoh_generic(self, args, sizeof(int), NULL);
 }
@@ -306,6 +410,10 @@ static PyObject* py_memcpy_dtod_generic(PyObject* self, PyObject* args, size_t e
 }
 
 // type-specific device to device copy functions
+static PyObject* py_memcpy_dtod_short(PyObject* self, PyObject* args){
+  return py_memcpy_dtod_generic(self, args, sizeof(short));
+}
+
 static PyObject* py_memcpy_dtod_int(PyObject* self, PyObject* args){
   return py_memcpy_dtod_generic(self, args, sizeof(int));
 }
@@ -329,6 +437,24 @@ static PyObject* py_cuda_free(PyObject* self, PyObject* args){
   void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
   if(device_ptr) CUDA_CHECK(cudaFree(device_ptr));
   Py_RETURN_NONE;
+}
+
+// retrieve data from the list at a specific index for short
+static PyObject* py_get_value_short(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &index)) return NULL;
+
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  short host_value;
+  CUDA_CHECK(cudaMemcpy(&host_value, (char*)device_ptr + index * sizeof(short), sizeof(short), cudaMemcpyDeviceToHost));
+  return PyLong_FromLong(host_value);
 }
 
 // retrieve data from the list at a specific index for int
@@ -404,6 +530,37 @@ static PyObject* py_get_value_complex(PyObject* self, PyObject* args) {
 }
 
 // retrieve data from the list within the given range and steps for int
+static PyObject* py_get_slice_short(PyObject* self, PyObject* args){
+  void* device_ptr;
+  size_t start, stop, steps;
+
+  if(!PyArg_ParseTuple(args, "Kkkk", (unsigned long*)&device_ptr, &start, &stop, &steps)) return NULL;
+  if(start >= stop){
+    PyErr_SetString(PyExc_ValueError, "Start index must be less than stop index");
+    return NULL;
+  }
+
+  if(steps == 0){
+    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
+    return NULL;
+  }
+
+  size_t num_elements = (stop - start + steps - 1) / steps;
+  PyObject* py_list = PyList_New(num_elements);
+  if(!py_list){
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
+    return NULL;
+  }
+
+  for(size_t i = 0, current = start; i < num_elements; ++i, current += steps){
+    short value;
+    CUDA_CHECK(cudaMemcpy(&value, (char*)device_ptr + current * sizeof(short), sizeof(short), cudaMemcpyDeviceToHost));
+    PyList_SetItem(py_list, i, PyLong_FromLong(value));
+  }
+  return py_list;
+}
+
+// retrieve data from the list within the given range and steps for int
 static PyObject* py_get_slice_int(PyObject* self, PyObject* args){
   void* device_ptr;
   size_t start, stop, steps;
@@ -420,7 +577,6 @@ static PyObject* py_get_slice_int(PyObject* self, PyObject* args){
   }
 
   size_t num_elements = (stop - start + steps - 1) / steps;
-
   PyObject* py_list = PyList_New(num_elements);
   if(!py_list){
     PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
@@ -533,6 +689,22 @@ static PyObject* py_get_slice_complex(PyObject* self, PyObject* args) {
   return py_list;
 }
 
+// set a data from a list at a specific index for short
+static PyObject* py_set_value_short(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t index;
+  short value;
+
+  if(!PyArg_ParseTuple(args, "Oni", &py_device_ptr, &index, &value)) return NULL;
+  short* device_ptr = (short*)PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+  CUDA_CHECK(cudaMemcpy(device_ptr + index, &value, sizeof(short), cudaMemcpyHostToDevice));
+  Py_RETURN_NONE;
+}
+
 // set a data from a list at a specific index for int
 static PyObject* py_set_value_int(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
@@ -606,120 +778,6 @@ static PyObject* py_set_value_complex(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
-
-// set value in list within the certain range for complex
-static PyObject* py_set_slice_int(PyObject* self, PyObject* args){
-  PyObject* py_device_ptr;
-  Py_ssize_t start, stop, step;
-  PyObject* py_values;
-
-  if(!PyArg_ParseTuple(args, "OnnO", &py_device_ptr, &start, &stop, &step, &py_values)) return NULL;
-
-  int* device_ptr = (int*)PyLong_AsVoidPtr(py_device_ptr);
-  if(device_ptr == NULL){
-    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
-    return NULL;
-  }
-
-  if(!PyList_Check(py_values)){
-    PyErr_SetString(PyExc_ValueError, "Values must be a list of integers");
-    return NULL;
-  }
-
-  if(step == 0){
-    PyErr_SetString(PyExc_ValueError, "Steps must be greater than 0");
-    return NULL;
-  }
-
-  Py_ssize_t num_elements = (stop - start + step  - 1) / step;
-  int* host_values = (int*)malloc(num_elements * sizeof(int));
-  if(!host_values){
-    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for vvalues");
-    return NULL;
-  }
-
-  for(Py_ssize_t i = 0; i < num_elements; ++i){
-    PyObject* py_value = PyList_GetItem(py_values, i * step);
-    if(!PyLong_Check(py_value)){
-      free(host_values);
-      PyErr_SetString(PyExc_ValueError, "All values must be integers");
-      return NULL;
-    }
-    host_values[i] = (int)PyLong_AsLong(py_value);
-  }
-
-  CUDA_CHECK(cudaMemcpy(device_ptr + start, host_values, num_elements * sizeof(int), cudaMemcpyHostToDevice));
-  free(host_values);
-  Py_RETURN_NONE;
-}
-
-// set value in list within the certain range for long
-static PyObject* py_set_slice_long(PyObject* self, PyObject* args) {
-  PyObject* py_device_ptr;
-  Py_ssize_t start, stop, step;
-  PyObject* py_values;
-
-  if(!PyArg_ParseTuple(args, "OnnnO", &py_device_ptr, &start, &stop, &step, &py_values)) return NULL;
-
-  long* device_ptr = (long*)PyLong_AsVoidPtr(py_device_ptr);
-  if(device_ptr == NULL){
-    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
-    return NULL;
-  }
-
-  if(step <= 0){
-    PyErr_SetString(PyExc_ValueError, "Step must be greater than 0");
-    return NULL;
-  }
-
-  if(!PyList_Check(py_values)){
-    PyErr_SetString(PyExc_ValueError, "Values must be a list");
-    return NULL;
-  }
-
-  Py_ssize_t num_elements = (stop - start + step - 1) / step;
-  if(PyList_Size(py_values) != num_elements){
-    PyErr_SetString(PyExc_ValueError, "Size of values list does not match the slice length");
-    return NULL;
-  }
-
-  long* host_values = (long*)malloc(num_elements * sizeof(long));
-  if(!host_values){
-    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for host values");
-    return NULL;
-  }
-
-  for(Py_ssize_t i = 0; i < num_elements; ++i){
-    PyObject* py_value = PyList_GetItem(py_values, i);
-    if(!PyLong_Check(py_value)){
-      free(host_values);
-      PyErr_SetString(PyExc_ValueError, "All values must be integers");
-      return NULL;
-    }
-    host_values[i] = (long)PyLong_AsLong(py_value);
-  }
-
-  cudaError_t err = cudaMemcpy(device_ptr + start, host_values, num_elements * sizeof(long), cudaMemcpyHostToDevice);
-  free(host_values);
-
-  if(err != cudaSuccess){
-    PyErr_SetString(PyExc_RuntimeError, cudaGetErrorString(err));
-    return NULL;
-  }
-
-  Py_RETURN_NONE;
-}
-
-// set value in list within the certain range for double
-static PyObject* py_set_slice_double(PyObject* self, PyObject* args){
-  Py_RETURN_NONE;
-}
-
-// set value in list within the certain range for long
-static PyObject* py_set_slice_complex(PyObject* self, PyObject* args){
-  Py_RETURN_NONE;
-}
-
 // memory query function remains unchanged
 static PyObject* py_cuda_query_free_memory(PyObject* self, PyObject* args){
   size_t free_mem = 0, total_mem = 0;
@@ -729,38 +787,48 @@ static PyObject* py_cuda_query_free_memory(PyObject* self, PyObject* args){
 
 // method definitions for all data types
 static PyMethodDef CuManagerMethods[] = {
-  {"cuda_alloc_int", py_cuda_alloc_int, METH_VARARGS, "Allocate int array on CUDA device"},
-  {"cuda_alloc_long", py_cuda_alloc_long, METH_VARARGS, "Allocate long array on CUDA device"},
-  {"cuda_alloc_double", py_cuda_alloc_double, METH_VARARGS, "Allocate double array on CUDA device"},
-  {"cuda_alloc_complex", py_cuda_alloc_complex, METH_VARARGS, "Allocate complex array on CUDA device"},
-  {"memcpy_htod_int", py_memcpy_htod_int, METH_VARARGS, "Copy int array from host to device"},
-  {"memcpy_htod_long", py_memcpy_htod_long, METH_VARARGS, "Copy long array from host to device"},
-  {"memcpy_htod_double", py_memcpy_htod_double, METH_VARARGS, "Copy double array from host to device"},
-  {"memcpy_htod_complex", py_memcpy_htod_complex, METH_VARARGS, "Copy complex array from host to device"},
-  {"memcpy_dtoh_int", py_memcpy_dtoh_int, METH_VARARGS, "Copy int array from device to host"},
-  {"memcpy_dtoh_long", py_memcpy_dtoh_long, METH_VARARGS, "Copy long array from device to host"},
-  {"memcpy_dtoh_double", py_memcpy_dtoh_double, METH_VARARGS, "Copy double array from device to host"},
-  {"memcpy_dtoh_complex", py_memcpy_dtoh_complex, METH_VARARGS, "Copy complex array from device to host"},
-  {"memcpy_dtod_int", py_memcpy_dtod_int, METH_VARARGS, "Copy int array between device locations"},
-  {"memcpy_dtod_long", py_memcpy_dtod_long, METH_VARARGS, "Copy long array between device locations"},
-  {"memcpy_dtod_double", py_memcpy_dtod_double, METH_VARARGS, "Copy double array between device locations"},
-  {"memcpy_dtod_complex", py_memcpy_dtod_complex, METH_VARARGS, "Copy complex array between device locations"},
-  {"cuda_free", py_cuda_free, METH_VARARGS, "Free CUDA device memory"},
-  {"cuda_query_free_memory", py_cuda_query_free_memory, METH_NOARGS, "Query available CUDA device memory"},
-  {"get_value_int", py_get_value_int, METH_VARARGS, "Get an int value from the device at a specific index"},
-  {"get_value_long", py_get_value_long, METH_VARARGS, "Get a long value from the device at a specific index"},
-  {"get_value_double", py_get_value_double, METH_VARARGS, "Get a double value from the device at a specific index"},
-  {"get_value_complex", py_get_value_complex, METH_VARARGS, "Get a complex value from the device at a specific index"},
-  {"get_slice_int", py_get_slice_int, METH_VARARGS, "Get int slice from device memory"},
-  {"get_slice_long", py_get_slice_long, METH_VARARGS, "Get long slice from device memory"},
-  {"get_slice_double", py_get_slice_double, METH_VARARGS, "Get double slice from device memory"},
-  {"get_slice_complex", py_get_slice_complex, METH_VARARGS, "Get complex slice from device memory"},
-  {"set_value_int", py_set_value_int, METH_VARARGS, "Set an integer value in device memory"},
-  {"set_value_long", py_set_value_long, METH_VARARGS, "Set a long value in device memory"},
-  {"set_value_double", py_set_value_double, METH_VARARGS, "Set a double value in device memory"},
-  {"set_value_complex", py_set_value_complex, METH_VARARGS, "Set a complex value in device memory"},
-  {"set_slice_int", py_set_slice_int, METH_VARARGS, "Set int sliced from device memory"},
-  {"set_slice_long", py_set_slice_long, METH_VARARGS, "Set long sliced from device memory"},
+  {"alloc_short", py_cuda_alloc_short, METH_VARARGS, "allocate memory on CUDA device for short data type"},
+  {"alloc_int", py_cuda_alloc_int, METH_VARARGS, "allocate memory on CUDA device for integer data type"},
+  {"alloc_long", py_cuda_alloc_long, METH_VARARGS, "allocate memory on CUDA device for long data type"},
+  {"alloc_double", py_cuda_alloc_double, METH_VARARGS, "allocate memory on CUDA device for double data type"},
+  {"alloc_complex", py_cuda_alloc_complex, METH_VARARGS, "allocate memory on CUDA device for complex data type"},
+  {"memcpy_htod_short", py_memcpy_htod_short, METH_VARARGS, "copy memory from host to device for short data type"},
+  {"memcpy_htod_int", py_memcpy_htod_int, METH_VARARGS, "copy memory from host to device for integer data type"},
+  {"memcpy_htod_long", py_memcpy_htod_long, METH_VARARGS, "copy memory from host to device for long data type"},
+  {"memcpy_htod_double", py_memcpy_htod_double, METH_VARARGS, "copy memory from host to device for double data type"},
+  {"memcpy_htod_complex", py_memcpy_htod_complex, METH_VARARGS, "copy memory from host to device for complex data type"},
+  {"memcpy_htoh_short", py_memcpy_htoh_short, METH_VARARGS, "copy memory from host to host for short data type"},
+  {"memcpy_htoh_int", py_memcpy_htoh_int, METH_VARARGS, "copy memory from host to host for integer data type"},
+  {"memcpy_htoh_long", py_memcpy_htoh_long, METH_VARARGS, "copy memory from host to host for long data type"},
+  {"memcpy_htoh_double", py_memcpy_htoh_double, METH_VARARGS, "copy memory from host to host for double data type"},
+  {"memcpy_htoh_complex", py_memcpy_htoh_complex, METH_VARARGS, "copy memory from host to host for complex data type"},
+  {"memcpy_dtoh_short", py_memcpy_dtoh_short, METH_VARARGS, "copy memory from device to host for short data type"},
+  {"memcpy_dtoh_int", py_memcpy_dtoh_int, METH_VARARGS, "copy memory from device to host for integer data type"},
+  {"memcpy_dtoh_long", py_memcpy_dtoh_long, METH_VARARGS, "copy memory from device to host for long data type"},
+  {"memcpy_dtoh_double", py_memcpy_dtoh_double, METH_VARARGS, "copy memory from device to host for double data type"},
+  {"memcpy_dtoh_complex", py_memcpy_dtoh_complex, METH_VARARGS, "copy memory from device to host for complex data type"},
+  {"memcpy_dtod_short", py_memcpy_dtod_short, METH_VARARGS, "copy memory from device to device for short data type"},
+  {"memcpy_dtod_int", py_memcpy_dtod_int, METH_VARARGS, "copy memory from device to device for integer data type"},
+  {"memcpy_dtod_long", py_memcpy_dtod_long, METH_VARARGS, "copy memory from device to device for long data type"},
+  {"memcpy_dtod_double", py_memcpy_dtod_double, METH_VARARGS, "copy memory from device to device for double data type"},
+  {"memcpy_dtod_complex", py_memcpy_dtod_complex, METH_VARARGS, "copy memory from device to device for complex data type"},
+  {"free", py_cuda_free, METH_VARARGS, "free the memory from CUDA device"},
+  {"query_free_memory", py_cuda_query_free_memory, METH_NOARGS, "query available CUDA device memory"},
+  {"get_value_short", py_get_value_short, METH_VARARGS, "get an short value from the device at a specific index"},
+  {"get_value_int", py_get_value_int, METH_VARARGS, "get an integer value from the device at a specific index"},
+  {"get_value_long", py_get_value_long, METH_VARARGS, "get a long value from the device at a specific index"},
+  {"get_value_double", py_get_value_double, METH_VARARGS, "get a double value from the device at a specific index"},
+  {"get_value_complex", py_get_value_complex, METH_VARARGS, "get a complex value from the device at a specific index"},
+  {"get_slice_short", py_get_slice_short, METH_VARARGS, "get short slice from device memory"},
+  {"get_slice_int", py_get_slice_int, METH_VARARGS, "get integer slice from device memory"},
+  {"get_slice_long", py_get_slice_long, METH_VARARGS, "get long slice from device memory"},
+  {"get_slice_double", py_get_slice_double, METH_VARARGS, "get double slice from device memory"},
+  {"get_slice_complex", py_get_slice_complex, METH_VARARGS, "get complex slice from device memory"},
+  {"set_value_short", py_set_value_short, METH_VARARGS, "set an short value in device memory"},
+  {"set_value_int", py_set_value_int, METH_VARARGS, "set an integer value in device memory"},
+  {"set_value_long", py_set_value_long, METH_VARARGS, "set a long value in device memory"},
+  {"set_value_double", py_set_value_double, METH_VARARGS, "set a double value in device memory"},
+  {"set_value_complex", py_set_value_complex, METH_VARARGS, "set a complex value in device memory"},
   {NULL, NULL, 0, NULL}
 };
 
