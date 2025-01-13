@@ -13,9 +13,6 @@
 - ops between dtypes
 - vector(1D array) and Matrix(2D array)
 
-## Prerequisites
-Before building the library, ensure the following dependencies are installed
-- [pybind11](https://pybind11.readthedocs.io/en/stable/installing.html)
 
 ## Installation
 1. Clone this repo and navigate to the cloned dir
