@@ -84,6 +84,7 @@ from .src.cuda_stream import py_query_free_memory
 
 # count number of CUDA-device
 from .src.cuda_stream import py_count_device
+from .src.cuda_stream import py_cuda_available
 
 
 TYPE = [int, float, complex]
@@ -106,7 +107,7 @@ def alloc_long(x:List): return POINTER(py_alloc_long(x))
 def alloc_float(x:List): return POINTER(py_alloc_float(x))
 def alloc_double(x:List): return POINTER(py_alloc_double(x))
 def alloc_complex(x:List): return POINTER(py_alloc_complex(x))
-# def alloc_bool(x:List): return POINTER(py_alloc_bool(x))
+def alloc_bool(x:List): return POINTER(py_alloc_bool(x))
 
 def free(ptr:POINTER): py_free(ptr.value); return None
 def query_free_memory(): return py_query_free_memory()
@@ -117,7 +118,7 @@ def memcpy_htod_long(ptr:POINTER, x:List): py_memcpy_htod_long(ptr.value, x); re
 def memcpy_htod_float(ptr:POINTER, x:List): py_memcpy_htod_float(ptr.value, x); return None
 def memcpy_htod_double(ptr:POINTER, x:List): py_memcpy_htod_double(ptr.value, x); return None
 def memcpy_htod_complex(ptr:POINTER, x:List): py_memcpy_htod_complex(ptr.value, x); return None
-# def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htod_bool(ptr.value, x); return None
+def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htod_bool(ptr.value, x); return None
 
 def memcpy_htoh_short(src:List, dst:List): py_memcpy_htoh_short(src, dst); return None
 def memcpy_htoh_int(src:List, dst:List): py_memcpy_htoh_int(src, dst); return None
@@ -125,7 +126,7 @@ def memcpy_htoh_long(src:List, dst:List): py_memcpy_htoh_long(src, dst); return 
 def memcpy_htoh_float(src:List, dst:List): py_memcpy_htoh_float(src, dst); return None
 def memcpy_htoh_double(src:List, dst:List): py_memcpy_htoh_double(src, dst); return None
 def memcpy_htoh_complex(src:List, dst:List): py_memcpy_htoh_complex(src, dst); return None
-# def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htod_bool(ptr.value, x); return None
+def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htoh_bool(ptr.value, x); return None
 
 def memcpy_dtoh_short(ptr:POINTER, length:int): return py_memcpy_dtoh_short(ptr.value, length)
 def memcpy_dtoh_int(ptr:POINTER, length:int): return py_memcpy_dtoh_int(ptr.value, length)
@@ -133,7 +134,7 @@ def memcpy_dtoh_long(ptr:POINTER, length:int): return py_memcpy_dtoh_long(ptr.va
 def memcpy_dtoh_float(ptr:POINTER, length:int): return py_memcpy_dtoh_float(ptr.value, length)
 def memcpy_dtoh_double(ptr:POINTER, length:int): return py_memcpy_dtoh_double(ptr.value, length)
 def memcpy_dtoh_complex(ptr:POINTER, length:int): return py_memcpy_dtoh_complex(ptr.value, length)
-# def memcpy_dtoh_bool(ptr:POINTER, length:int): return py_memcpy_dtoh_bool(ptr.value, length)
+def memcpy_dtoh_bool(ptr:POINTER, length:int): return py_memcpy_dtoh_bool(ptr.value, length)
 
 def memcpy_dtod_short(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_short(src_ptr.value, dst_ptr.value, length); return None
 def memcpy_dtod_int(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_int(src_ptr.value, dst_ptr.value, length); return None
@@ -141,7 +142,7 @@ def memcpy_dtod_long(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dt
 def memcpy_dtod_float(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_float(src_ptr.value, dst_ptr.value, length); return None
 def memcpy_dtod_double(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_double(src_ptr.value, dst_ptr.value, length); return None
 def memcpy_dtod_complex(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_complex(src_ptr.value, dst_ptr.value, length); return None
-# def memcpy_dtod_bool(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_bool(src_ptr.value, dst_ptr.value, length); return None
+def memcpy_dtod_bool(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_bool(src_ptr.value, dst_ptr.value, length); return None
 
 def get_value_short(ptr:POINTER, index:int): return py_get_value_short(ptr.value, index)
 def get_value_int(ptr:POINTER, index:int): return py_get_value_int(ptr.value, index)
@@ -149,7 +150,7 @@ def get_value_long(ptr:POINTER, index:int): return py_get_value_long(ptr.value, 
 def get_value_float(ptr:POINTER, index:int): return py_get_value_float(ptr.value, index)
 def get_value_double(ptr:POINTER, index:int): return py_get_value_double(ptr.value, index)
 def get_value_complex(ptr:POINTER, index:int): return py_get_value_complex(ptr.value, index)
-# def get_value_bool(ptr:POINTER, index:int): return py_get_value_bool(ptr.value, index)
+def get_value_bool(ptr:POINTER, index:int): return py_get_value_bool(ptr.value, index)
 
 def get_slice_short(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_short(ptr.value, start, stop, step)
 def get_slice_int(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_int(ptr.value, start, stop, step)
@@ -157,19 +158,20 @@ def get_slice_long(ptr:POINTER, start:int, stop:int, step:int): return py_get_sl
 def get_slice_float(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_float(ptr.value, start, stop, step)
 def get_slice_double(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_double(ptr.value, start, stop, step)
 def get_slice_complex(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_complex(ptr.value, start, stop, step)
-# def get_slice_bool(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_bool(ptr.value, start, stop, step)
+def get_slice_bool(ptr:POINTER, start:int, stop:int, step:int): return py_get_slice_bool(ptr.value, start, stop, step)
 
-def set_value_short(ptr:POINTER, index:int): py_set_value_short(ptr.value, index); return None
-def set_value_int(ptr:POINTER, index:int): py_set_value_int(ptr.value, index); return None
-def set_value_long(ptr:POINTER, index:int): py_set_value_long(ptr.value, index); return None
-def set_value_float(ptr:POINTER, index:int): py_set_value_float(ptr.value, index); return None
-def set_value_double(ptr:POINTER, index:int): py_set_value_double(ptr.value, index); return None
-def set_value_complex(ptr:POINTER, index:int): py_set_value_complex(ptr.value, index); return None
-# def set_value_bool(ptr:POINTER, index:int): py_set_value_bool(ptr.value, index); return None
+def set_value_short(ptr:POINTER, index:int, value:int): py_set_value_short(ptr.value, index, value); return None
+def set_value_int(ptr:POINTER, index:int, value:int): py_set_value_int(ptr.value, index, value); return None
+def set_value_long(ptr:POINTER, index:int, value:int): py_set_value_long(ptr.value, index, value); return None
+def set_value_float(ptr:POINTER, index:int, value:float): py_set_value_float(ptr.value, index, value); return None
+def set_value_double(ptr:POINTER, index:int, value:float): py_set_value_double(ptr.value, index, value); return None
+def set_value_complex(ptr:POINTER, index:int, value:complex): py_set_value_complex(ptr.value, index, value); return None
+def set_value_bool(ptr:POINTER, index:int, value:bool): py_set_value_bool(ptr.value, index, value); return None
 
 def count_device(): return py_count_device()
 
 # check for CUDA device availability
+# def is_available(): return py_cuda_available()
 def is_available():
   try:
     result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
