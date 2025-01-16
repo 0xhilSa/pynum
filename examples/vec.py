@@ -11,3 +11,6 @@ x.cpu()   # vector from CUDA to CPU
 print(x)
 print(x.numpy())
 print(x.device)
+
+print(x[0])
+print(x[0].numpy())
