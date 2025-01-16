@@ -899,7 +899,6 @@ static PyObject* py_get_slice_bool(PyObject* self, PyObject* args){
   }
 
   size_t num_elements = (stop - start + steps - 1) / steps;
-
   PyObject* py_list = PyList_New(num_elements);
   if(!py_list){
     PyErr_SetString(PyExc_RuntimeError, "Failed to create Python list");
@@ -1052,6 +1051,12 @@ static PyObject* py_count_device(){
   return PyLong_FromLong(count);
 }
 
+static PyObject* py_cuda_available(){
+  int count = 0;
+  cudaError_t err = cudaGetDeviceCount(&count);
+  if(err != cudaSuccess) Py_RETURN_FALSE;
+  Py_RETURN_TRUE;
+}
 
 // method definitions for all data types
 static PyMethodDef CuManagerMethods[] = {
@@ -1114,6 +1119,7 @@ static PyMethodDef CuManagerMethods[] = {
   {"py_set_value_complex", py_set_value_complex, METH_VARARGS, "set a complex value in device memory"},
   {"py_set_value_bool", py_set_value_bool, METH_VARARGS, "set a boool value in device memory"},
   {"py_count_device", py_count_device, METH_NOARGS, "returns the number of device available"},
+  {"py_cuda_available", py_cuda_available, METH_NOARGS, "returns whether the CUDA device is available or not"},
   {NULL, NULL, 0, NULL}
 };
 
