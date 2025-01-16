@@ -59,7 +59,7 @@ class Vector:
         elif self.__dtype in INTEGER: return Vector([get_value_long(self.__array, index)], dtype=self.__dtype, device="CUDA")
         elif self.__dtype in COMPLEX: return Vector([get_value_complex(self.__array, index)], dtype=self.__dtype, device="CUDA")
         elif self.__dtype in BOOLEAN: return Vector([get_value_bool(self.__array, index)], dtype=self.__dtype, device="CUDA")
-      else: return Vector(self.__dtype(self.__array[index]), dtype=self.__dtype, device="CPU")
+      else: return Vector([self.__dtype(self.__array[index])], dtype=self.__dtype, device="CPU")
     elif isinstance(index,slice):
       start, stop, step = index.start, index.stop, index.step
       step = step or 1
