@@ -1058,6 +1058,17 @@ static PyObject* py_cuda_available(){
   Py_RETURN_TRUE;
 }
 
+static PyObject* py_cuda_select_device(PyObject* self, PyObject* args){
+  int device_index;
+  if(!PyArg_ParseTuple(args, "i", &device_index)){
+    PyErr_SetString(PyExc_ValueError, "Expected an integer device index.");
+    return NULL;
+  }
+  CUDA_CHECK(cudaSetDevice(device_index));
+  Py_RETURN_NONE;
+}
+
+
 // method definitions for all data types
 static PyMethodDef CuManagerMethods[] = {
   {"py_alloc_short", py_cuda_alloc_short, METH_VARARGS, "allocate memory on CUDA device for short data type"},
@@ -1120,6 +1131,7 @@ static PyMethodDef CuManagerMethods[] = {
   {"py_set_value_bool", py_set_value_bool, METH_VARARGS, "set a boool value in device memory"},
   {"py_count_device", py_count_device, METH_NOARGS, "returns the number of device available"},
   {"py_cuda_available", py_cuda_available, METH_NOARGS, "returns whether the CUDA device is available or not"},
+  {"py_cuda_select_device", py_cuda_select_device, METH_VARARGS, "set the cuda device"},
   {NULL, NULL, 0, NULL}
 };
 
