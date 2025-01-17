@@ -45,7 +45,7 @@ class Vector:
       array = ptr
     else: raise RuntimeError(f"Device: '{device}' isn't support/available on this system")
     return array, length, dtype, device.upper()
-  def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, label='{self.__label}', const={self.__const})>"
+  def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
   def __len__(self): return self.__length
   def __del__(self):
     if self.__device == "CUDA": free(self.__array)
