@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Type, Union
 import numpy as np
+from graphviz import Digraph
 from .cuda import *
 from .ops import Ops, GroupOp, ops_mapping
 
@@ -15,10 +16,9 @@ DEVICE_SUPPORTED = ["CPU", "CUDA"]
 
 class Vector:
   def __init__(self, array:List[Type], dtype:Type=None, device:str="CPU", const:bool=False):
-    self.__array, self.__length, self.__dtype, self.__device = Vector.__check__(array, dtype, device)
+    self.__array, self.__length, self.__dtype, self.__device = self.__check__(array, dtype, device)
     self.__const = const
-  @staticmethod
-  def __check__(array:List[Type], dtype:Type, device:str):
+  def __check__(self, array:List[Type], dtype:Type, device:str):
     if dtype is None:
       if any(isinstance(x,(complex, np.complex128)) for x in array): dtype = complex
       elif all(isinstance(x,(int, np.integer)) for x in array): dtype = int
@@ -29,7 +29,7 @@ class Vector:
     array = [dtype(x) for x in array]
     length = len(array)
     if device.upper() == "CPU": pass
-    elif device.upper() == "CUDA":
+    elif device.upper() == "CUDA" and is_available():
       if dtype == int:
         ptr = alloc_long(array)
         memcpy_htod_long(ptr, array)
@@ -45,7 +45,7 @@ class Vector:
       array = ptr
     else: raise RuntimeError(f"Device: '{device}' isn't support/available on this system")
     return array, length, dtype, device.upper()
-  def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
+  def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, label='{self.__label}', const={self.__const})>"
   def __len__(self): return self.__length
   def __del__(self):
     if self.__device == "CUDA": free(self.__array)
@@ -148,3 +148,5 @@ class Vector:
       elif self.__dtype in COMPLEX: return np.array(memcpy_dtoh_complex(self.__array, self.__length))
       elif self.__dtype in BOOLEAN: return np.array(memcpy_dtoh_bool(self.__array, self.__length))
     return np.array(self.__array)
+  def set_device(self, index:int):
+    select_device(index)
