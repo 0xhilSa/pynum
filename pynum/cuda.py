@@ -3,7 +3,7 @@ these functions are written in C and
 defined at './pynum/src/cuda_stream.c'
 """
 
-from typing import Union, Type, List
+from typing import List
 import subprocess
 
 # allocators for different data types
@@ -85,6 +85,7 @@ from .src.cuda_stream import py_query_free_memory
 # count number of CUDA-device
 from .src.cuda_stream import py_count_device
 from .src.cuda_stream import py_cuda_available
+from .src.cuda_stream import py_cuda_select_device
 
 
 TYPE = [int, float, complex]
@@ -126,7 +127,7 @@ def memcpy_htoh_long(src:List, dst:List): py_memcpy_htoh_long(src, dst); return 
 def memcpy_htoh_float(src:List, dst:List): py_memcpy_htoh_float(src, dst); return None
 def memcpy_htoh_double(src:List, dst:List): py_memcpy_htoh_double(src, dst); return None
 def memcpy_htoh_complex(src:List, dst:List): py_memcpy_htoh_complex(src, dst); return None
-def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htoh_bool(ptr.value, x); return None
+def memcpy_htoh_bool(ptr:POINTER, x:List): py_memcpy_htoh_bool(ptr.value, x); return None
 
 def memcpy_dtoh_short(ptr:POINTER, length:int): return py_memcpy_dtoh_short(ptr.value, length)
 def memcpy_dtoh_int(ptr:POINTER, length:int): return py_memcpy_dtoh_int(ptr.value, length)
@@ -169,9 +170,9 @@ def set_value_complex(ptr:POINTER, index:int, value:complex): py_set_value_compl
 def set_value_bool(ptr:POINTER, index:int, value:bool): py_set_value_bool(ptr.value, index, value); return None
 
 def count_device(): return py_count_device()
+def select_device(index:int): py_cuda_select_device(index); return None
 
 # check for CUDA device availability
-# def is_available(): return py_cuda_available()
 def is_available():
   try:
     result = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
