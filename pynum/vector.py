@@ -3,6 +3,7 @@ from typing import List, Type, Union
 import numpy as np
 from graphviz import Digraph
 from .cuda import *
+from .exceptions import *
 from .ops import Ops, GroupOp, ops_mapping
 
 
@@ -24,8 +25,8 @@ class Vector:
       elif all(isinstance(x,(int, np.integer)) for x in array): dtype = int
       elif any(isinstance(x,(float,np.floating)) for x in array): dtype = float
       elif all(isinstance(x,bool) for x in array): dtype = bool
-      else: raise TypeError(f"An invalid dtype: '{dtype.__name__}' were given")
-    elif dtype not in ALL: raise TypeError(f"An invalid dtype: '{dtype.__name__}' were given")
+      else: raise InvalidDTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
+    elif dtype not in ALL: raise InvalidDTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
     array = [dtype(x) for x in array]
     length = len(array)
     if device.upper() == "CPU": pass
@@ -43,7 +44,7 @@ class Vector:
         ptr = alloc_bool(array)
         memcpy_htod_bool(ptr, array)
       array = ptr
-    else: raise RuntimeError(f"Device: '{device}' isn't support/available on this system")
+    else: raise DeviceError(f"Device: '{device}' isn't support/available on this system")
     return array, length, dtype, device.upper()
   def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
   def __len__(self): return self.__length
@@ -53,7 +54,7 @@ class Vector:
   def __getitem__(self, index:Union[int,slice]):
     if isinstance(index,int):
       if index < 0: index += self.__length
-      if not (0 <= index < self.__length): raise IndexError("Index out of range")
+      if not (0 <= index < self.__length): raise VectorIndexError("Index out of range")
       if self.__device == "CUDA":
         if self.__dtype in FLOATING: return Vector([get_value_double(self.__array, index)], dtype=self.__dtype, device="CUDA")
         elif self.__dtype in INTEGER: return Vector([get_value_long(self.__array, index)], dtype=self.__dtype, device="CUDA")
@@ -76,7 +77,7 @@ class Vector:
       elif self.__device == "CPU": return Vector(self.__array[index], dtype=self.__dtype, device="CPU")
     else: raise TypeError("Invalid index type. Must be an int or slice")
   def __setitem__(self, index:Union[int,slice], value:Type):
-    if self.__const: raise RuntimeError("Cannot make changes on immutable Vector")
+    if self.__const: raise ImmutableVectorError("Cannot make changes on immutable Vector")
     if isinstance(index,int):
       if index < 0: index += self.__length
       if not (0 <= index < self.__length): raise IndexError("Index out of range")
@@ -150,3 +151,4 @@ class Vector:
     return np.array(self.__array)
   def set_device(self, index:int):
     select_device(index)
+  def add(self, x, reverse:bool=False): pass
