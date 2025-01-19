@@ -24,15 +24,6 @@ from .src.cuda_stream import py_memcpy_htod_double
 from .src.cuda_stream import py_memcpy_htod_complex
 from .src.cuda_stream import py_memcpy_htod_bool
 
-# copy from host to host
-from .src.cuda_stream import py_memcpy_htoh_short
-from .src.cuda_stream import py_memcpy_htoh_int
-from .src.cuda_stream import py_memcpy_htoh_long
-from .src.cuda_stream import py_memcpy_htoh_float
-from .src.cuda_stream import py_memcpy_htoh_double
-from .src.cuda_stream import py_memcpy_htoh_complex
-from .src.cuda_stream import py_memcpy_htoh_bool
-
 # copy from device to host
 from .src.cuda_stream import py_memcpy_dtoh_short
 from .src.cuda_stream import py_memcpy_dtoh_int
@@ -41,15 +32,6 @@ from .src.cuda_stream import py_memcpy_dtoh_float
 from .src.cuda_stream import py_memcpy_dtoh_double
 from .src.cuda_stream import py_memcpy_dtoh_complex
 from .src.cuda_stream import py_memcpy_dtoh_bool
-
-# copy from device to device
-from .src.cuda_stream import py_memcpy_dtod_short
-from .src.cuda_stream import py_memcpy_dtod_int
-from .src.cuda_stream import py_memcpy_dtod_long
-from .src.cuda_stream import py_memcpy_dtod_float
-from .src.cuda_stream import py_memcpy_dtod_double
-from .src.cuda_stream import py_memcpy_dtod_complex
-from .src.cuda_stream import py_memcpy_dtod_bool
 
 # getters(index)
 from .src.cuda_stream import py_get_value_short
@@ -80,11 +62,11 @@ from .src.cuda_stream import py_set_value_bool
 
 # freebie
 from .src.cuda_stream import py_free
-from .src.cuda_stream import py_query_free_memory
+# from .src.cuda_stream import py_query_free_memory
 
 # count number of CUDA-device
 from .src.cuda_stream import py_count_device
-from .src.cuda_stream import py_cuda_available
+# from .src.cuda_stream import py_cuda_available
 from .src.cuda_stream import py_cuda_select_device
 
 
@@ -111,7 +93,7 @@ def alloc_complex(x:List): return POINTER(py_alloc_complex(x))
 def alloc_bool(x:List): return POINTER(py_alloc_bool(x))
 
 def free(ptr:POINTER): py_free(ptr.value); return None
-def query_free_memory(): return py_query_free_memory()
+# def query_free_memory(): return py_query_free_memory()
 
 def memcpy_htod_short(ptr:POINTER, x:List): py_memcpy_htod_short(ptr.value, x); return None
 def memcpy_htod_int(ptr:POINTER, x:List): py_memcpy_htod_int(ptr.value, x); return None
@@ -121,14 +103,6 @@ def memcpy_htod_double(ptr:POINTER, x:List): py_memcpy_htod_double(ptr.value, x)
 def memcpy_htod_complex(ptr:POINTER, x:List): py_memcpy_htod_complex(ptr.value, x); return None
 def memcpy_htod_bool(ptr:POINTER, x:List): py_memcpy_htod_bool(ptr.value, x); return None
 
-def memcpy_htoh_short(src:List, dst:List): py_memcpy_htoh_short(src, dst); return None
-def memcpy_htoh_int(src:List, dst:List): py_memcpy_htoh_int(src, dst); return None
-def memcpy_htoh_long(src:List, dst:List): py_memcpy_htoh_long(src, dst); return None
-def memcpy_htoh_float(src:List, dst:List): py_memcpy_htoh_float(src, dst); return None
-def memcpy_htoh_double(src:List, dst:List): py_memcpy_htoh_double(src, dst); return None
-def memcpy_htoh_complex(src:List, dst:List): py_memcpy_htoh_complex(src, dst); return None
-def memcpy_htoh_bool(ptr:POINTER, x:List): py_memcpy_htoh_bool(ptr.value, x); return None
-
 def memcpy_dtoh_short(ptr:POINTER, length:int): return py_memcpy_dtoh_short(ptr.value, length)
 def memcpy_dtoh_int(ptr:POINTER, length:int): return py_memcpy_dtoh_int(ptr.value, length)
 def memcpy_dtoh_long(ptr:POINTER, length:int): return py_memcpy_dtoh_long(ptr.value, length)
@@ -136,14 +110,6 @@ def memcpy_dtoh_float(ptr:POINTER, length:int): return py_memcpy_dtoh_float(ptr.
 def memcpy_dtoh_double(ptr:POINTER, length:int): return py_memcpy_dtoh_double(ptr.value, length)
 def memcpy_dtoh_complex(ptr:POINTER, length:int): return py_memcpy_dtoh_complex(ptr.value, length)
 def memcpy_dtoh_bool(ptr:POINTER, length:int): return py_memcpy_dtoh_bool(ptr.value, length)
-
-def memcpy_dtod_short(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_short(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_int(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_int(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_long(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_long(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_float(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_float(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_double(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_double(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_complex(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_complex(src_ptr.value, dst_ptr.value, length); return None
-def memcpy_dtod_bool(src_ptr:POINTER, dst_ptr:POINTER, length:int): py_memcpy_dtod_bool(src_ptr.value, dst_ptr.value, length); return None
 
 def get_value_short(ptr:POINTER, index:int): return py_get_value_short(ptr.value, index)
 def get_value_int(ptr:POINTER, index:int): return py_get_value_int(ptr.value, index)
