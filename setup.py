@@ -5,7 +5,7 @@ import os
 
 module = Extension(
   "pynum",
-  sources = ["pynum/src/cuda_stream.c"],
+  sources = ["pynum/src/cuda_stream.cpp"],
   libraries = ["cuda","cudart"]
 )
 
