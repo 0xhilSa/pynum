@@ -1,14 +1,4 @@
-from setuptools import setup, Extension, find_packages
-from pybind11.setup_helpers import Pybind11Extension, build_ext
-import sys
-import os
-
-module = Extension(
-  "pynum",
-  sources = ["pynum/src/cuda_stream.cpp"],
-  libraries = ["cuda","cudart"]
-)
-
+from setuptools import setup, find_packages
 
 setup(
   name = "pynum",
@@ -16,8 +6,7 @@ setup(
   url = "https://github.com/0xhilSa/pynum",
   license = "MIT",
   packages = find_packages(include=["pynum", "pynum.src"]),
-  ext_modules = [module],
-  package_data= {"pynum.src": ["*.so"]},
+  package_data= {"pynum.src": ["*.so", "*.pyi"]},
   author = "Sahil Rajwar",
   long_description_content_type = "text/markdown",
   python_requires = ">=3.10",
