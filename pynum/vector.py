@@ -161,8 +161,13 @@ class Vector:
       if self.__length != x.__length: raise ValueError("Both the vectors must have the same length")
       if self.__dtype != x.__dtype: raise NotImplementedError
       if self.__device == "CUDA":
-        if self.__dtype in INTEGER: ptr = add_long(self.__array, x.__array, self.__length)
-        elif self.__dtype in FLOATING: ptr = add_double(self.__array, x.__array, self.__length)
-        elif self.__dtype in COMPLEX: ptr = add_complex(self.__array, x.__array, self.__length)   # giving an unexpected result
+        if self.__dtype in INTEGER:
+          ptr = add_long(self.__array, x.__array, self.__length)
+          return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=self.__dtype, device="CUDA")
+        elif self.__dtype in FLOATING:
+          ptr = add_double(self.__array, x.__array, self.__length)
+          return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=self.__dtype, device="CUDA")
+        elif self.__dtype in COMPLEX:
+          ptr = add_complex(self.__array, x.__array, self.__length)
+          return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=self.__dtype, device="CUDA")
         else: DTypeError("Unsupported data type of a vector for addition")
-        return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=self.__dtype, device="CUDA")
