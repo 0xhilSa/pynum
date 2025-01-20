@@ -26,7 +26,7 @@ class Vector:
       elif any(isinstance(x,(float,np.floating)) for x in array): dtype = float
       elif all(isinstance(x,bool) for x in array): dtype = bool
       else: raise InvalidDTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
-    elif dtype not in ALL: raise InvalidDTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
+    elif dtype not in ALL: raise DTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
     array = [dtype(x) for x in array]
     length = len(array)
     if device.upper() == "CPU": pass
@@ -149,6 +149,20 @@ class Vector:
       elif self.__dtype in COMPLEX: return np.array(memcpy_dtoh_complex(self.__array, self.__length))
       elif self.__dtype in BOOLEAN: return np.array(memcpy_dtoh_bool(self.__array, self.__length))
     return np.array(self.__array)
-  def set_device(self, index:int):
-    select_device(index)
-  def add(self, x, reverse:bool=False): pass
+  def set_device(self, index:int): select_device(index)
+  def astype(self, dtype:Type):
+    if dtype not in ALL: raise TypeError(f"Invalid DType: {dtype}, expected from '{ALL}'")
+    if self.__dtype == dtype: return
+    if self.__device == "CUDA": raise NotImplementedError
+    elif self.__device == "CPU": self.__array = [dtype(x) for x in self.__array]
+  def add(self, x, reverse:bool=False):
+    if isinstance(x, Vector):
+      if self.__device != x.__device: raise DeviceError("Both the vectors must be at the same device either CUDA or CPU")
+      if self.__length != x.__length: raise ValueError("Both the vectors must have the same length")
+      if self.__dtype != x.__dtype: raise NotImplementedError
+      if self.__device == "CUDA":
+        if self.__dtype in INTEGER: ptr = add_long(self.__array, x.__array, self.__length)
+        elif self.__dtype in FLOATING: ptr = add_double(self.__array, x.__array, self.__length)
+        elif self.__dtype in COMPLEX: ptr = add_complex(self.__array, x.__array, self.__length)   # giving an unexpected result
+        else: DTypeError("Unsupported data type of a vector for addition")
+        return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=self.__dtype, device="CUDA")
