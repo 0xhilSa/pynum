@@ -1,3 +1,11 @@
+"""
+TODO:
+=====
+  1. Arithmetic ops
+  2. include LLVM
+"""
+
+
 from __future__ import annotations
 from typing import List, Type, Union
 import numpy as np
@@ -158,20 +166,7 @@ class Vector:
       elif self.__dtype == int and dtype == complex: ptr = long2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == float and dtype == int: ptr = double2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == float and dtype == complex: ptr = double2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == complex and dtype == int: ptr = complex2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == complex and dtype == float: ptr = complex2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
     elif self.__device == "CPU": return Vector([dtype(x) for x in self.__array], dtype=dtype, device="CPU")
-  def add(self, x, reverse:bool=False):
-    if isinstance(x, Vector):
-      if self.__device != x.__device: raise DeviceError("Both the vectors must be at the same device either CUDA or CPU")
-      if self.__length != x.__length: raise ValueError("Both the vectors must have the same length")
-      if self.__dtype != x.__dtype: raise NotImplementedError
-      if self.__device == "CUDA":
-        if self.__dtype in INTEGER:
-          ptr = add_long(self.__array, x.__array, self.__length)
-          return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=self.__dtype, device="CUDA")
-        elif self.__dtype in FLOATING:
-          ptr = add_double(self.__array, x.__array, self.__length)
-          return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=self.__dtype, device="CUDA")
-        elif self.__dtype in COMPLEX:
-          ptr = add_complex(self.__array, x.__array, self.__length)
-          return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=self.__dtype, device="CUDA")
-        else: DTypeError("Unsupported data type of a vector for addition")
+  def add(self, x, reverse:bool=False): raise NotImplementedError   # need to refactor it
