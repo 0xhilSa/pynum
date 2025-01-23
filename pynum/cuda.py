@@ -74,10 +74,13 @@ from .src.cuda_stream import free
 from .src.cuda_stream import count_device
 from .src.cuda_stream import select_device
 
+# converters
 from .src.cuda_stream import long2double
 from .src.cuda_stream import long2complex
 from .src.cuda_stream import double2long
 from .src.cuda_stream import double2complex
+from .src.cuda_stream import complex2long
+from .src.cuda_stream import complex2double
 
 
 TYPE = [int, float, complex]
