@@ -58,19 +58,29 @@ __global__ void cast_long2double_kernel(const long* x, double* z, size_t size){
   if(index < size){ z[index] = static_cast<double>(x[index]); }
 }
 
-__global__ void cast_double2long_kernel(const double* x, long* z, size_t size){
-  int index = blockIdx.x * blockDim.x + threadIdx.x;
-  if(index < size){ z[index] = static_cast<long>(x[index]); }
-}
-
 __global__ void cast_long2complex_kernel(const long* x, cuDoubleComplex* z, size_t size){
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   if(index < size){ z[index] = make_cuDoubleComplex(static_cast<double>(x[index]), 0.0); }
 }
 
+__global__ void cast_long2bool_kernel(const long* x, bool* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<bool>(x[index]); }
+}
+
+__global__ void cast_double2long_kernel(const double* x, long* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<long>(x[index]); }
+}
+
 __global__ void cast_double2complex_kernel(const double* x, cuDoubleComplex* z, size_t size){
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   if(index < size){ z[index] = make_cuDoubleComplex(x[index], 0.0); }
+}
+
+__global__ void cast_double2bool_kernel(const double* x, bool* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<bool>(x[index]); }
 }
 
 __global__ void cast_complex2long_kernel(const cuDoubleComplex* x, long* z, size_t size){
@@ -86,6 +96,14 @@ __global__ void cast_complex2double_kernel(const cuDoubleComplex* x, double* z, 
   if(index < size){
     if(cuCimag(x[index]) != 0){ z[index] = LONG_MIN; } 
     else{ z[index] = static_cast<double>(cuCreal(x[index])); } 
+  }
+}
+
+__global__ void cast_complex2bool_kernel(const cuDoubleComplex* x, bool* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){
+    if(cuCreal(x[index]) == 0 && cuCimag(x[index]) == 0) z[index] = static_cast<bool>(0);
+    else z[index] = static_cast<bool>(1);
   }
 }
 
@@ -911,6 +929,29 @@ static PyObject* py_cast_long2double(PyObject* self, PyObject* args){
   return py_result_ptr;
 }
 
+static PyObject* py_cast_long2bool(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+  cast_long2bool_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const long*>(device_ptr),
+    static_cast<bool*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
 static PyObject* py_cast_double2long(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
   Py_ssize_t size;
@@ -980,6 +1021,29 @@ static PyObject* py_cast_double2complex(PyObject* self, PyObject* args){
   return py_result_ptr;
 }
 
+static PyObject* py_cast_double2bool(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+  cast_double2bool_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const double*>(device_ptr),
+    static_cast<bool*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
 static PyObject* py_cast_complex2long(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
   Py_ssize_t size;
@@ -1037,6 +1101,29 @@ static PyObject* py_cast_complex2double(PyObject* self, PyObject* args){
   cast_complex2double_kernel<<<blocks_per_grid, threads_per_block>>>(
     static_cast<const cuDoubleComplex*>(device_ptr),
     static_cast<double*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
+static PyObject* py_cast_complex2bool(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+  cast_complex2bool_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const cuDoubleComplex*>(device_ptr),
+    static_cast<bool*>(device_result_ptr),
     size
   );
   CUDA_CHECK(cudaGetLastError());
@@ -1120,10 +1207,13 @@ static PyMethodDef CuManagerMethods[] = {
   {"free", py_cuda_free, METH_VARARGS, "free the pointer"},
   {"long2double", py_cast_long2double, METH_VARARGS, "convert dtype from long to double"},
   {"long2complex", py_cast_long2complex, METH_VARARGS, "convert dtype from long to complex"},
+  {"long2bool", py_cast_long2bool, METH_VARARGS, "convert dtype from long to bool"},
   {"double2long", py_cast_double2long, METH_VARARGS, "convert dtype from double to long"},
   {"double2complex", py_cast_double2complex, METH_VARARGS, "convert dtype from double to complex"},
+  {"double2bool", py_cast_double2bool, METH_VARARGS, "convert dtype from double to bool"},
   {"complex2long", py_cast_complex2long, METH_VARARGS, "convert dtype from complex to long"},
   {"complex2double", py_cast_complex2double, METH_VARARGS, "convert dtype from complex to double"},
+  {"complex2bool", py_cast_complex2bool, METH_VARARGS, "convert dtype from complex to bool"},
   {NULL, NULL, 0, NULL}
 };
 

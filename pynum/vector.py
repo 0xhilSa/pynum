@@ -162,11 +162,14 @@ class Vector:
     if dtype not in ALL: raise TypeError(f"Invalid DType: {dtype}, expected from '{ALL}'")
     if self.__dtype == dtype: return
     if self.__device == "CUDA":
-      if self.__dtype == int and dtype == float: ptr = long2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
-      elif self.__dtype == int and dtype == complex: ptr = long2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
-      elif self.__dtype == float and dtype == int: ptr = double2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
-      elif self.__dtype == float and dtype == complex: ptr = double2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
-      elif self.__dtype == complex and dtype == int: ptr = complex2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
-      elif self.__dtype == complex and dtype == float: ptr = complex2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
+      if self.__dtype == int and dtype == float: ptr = long2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == int and dtype == complex: ptr = long2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == int and dtype == bool: ptr = long2bool(self.__array, self.__array); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == float and dtype == int: ptr = double2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == float and dtype == complex: ptr = double2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == float and dtype == bool: ptr = double2bool(self.__array, self.__length); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == complex and dtype == int: ptr = complex2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == complex and dtype == float: ptr = complex2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device=self.__device)
+      elif self.__dtype == complex and dtype == bool: ptr = complex2bool(self.__array, self.__length); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device=self.__device)
     elif self.__device == "CPU": return Vector([dtype(x) for x in self.__array], dtype=dtype, device="CPU")
   def add(self, x, reverse:bool=False): raise NotImplementedError   # need to refactor it
