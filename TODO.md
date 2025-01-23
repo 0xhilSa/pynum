@@ -1,5 +1,5 @@
 ## Key Features needs to add/enhance
 
-- add arithmetic ops b/w the vectors
-- cuda device switch
-- mapping (not scheduled yet)
+- Make it compatible for Windows OS
+- Arithmetic ops b/w the vectors
+- Include LLVM
