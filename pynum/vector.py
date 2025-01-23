@@ -153,8 +153,12 @@ class Vector:
   def astype(self, dtype:Type):
     if dtype not in ALL: raise TypeError(f"Invalid DType: {dtype}, expected from '{ALL}'")
     if self.__dtype == dtype: return
-    if self.__device == "CUDA": raise NotImplementedError
-    elif self.__device == "CPU": self.__array = [dtype(x) for x in self.__array]
+    if self.__device == "CUDA":
+      if self.__dtype == int and dtype == float: ptr = long2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == int and dtype == complex: ptr = long2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == float and dtype == int: ptr = double2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == float and dtype == complex: ptr = double2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
+    elif self.__device == "CPU": return Vector([dtype(x) for x in self.__array], dtype=dtype, device="CPU")
   def add(self, x, reverse:bool=False):
     if isinstance(x, Vector):
       if self.__device != x.__device: raise DeviceError("Both the vectors must be at the same device either CUDA or CPU")
