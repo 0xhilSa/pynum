@@ -73,6 +73,21 @@ __global__ void cast_double2complex_kernel(const double* x, cuDoubleComplex* z, 
   if(index < size){ z[index] = make_cuDoubleComplex(x[index], 0.0); }
 }
 
+__global__ void cast_complex2long_kernel(const cuDoubleComplex* x, long* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){
+    if(cuCimag(x[index]) != 0){ z[index] = LONG_MIN; } 
+    else{ z[index] = static_cast<long>(cuCreal(x[index])); } 
+  }
+}
+
+__global__ void cast_complex2double_kernel(const cuDoubleComplex* x, double* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){
+    if(cuCimag(x[index]) != 0){ z[index] = LONG_MIN; } 
+    else{ z[index] = static_cast<double>(cuCreal(x[index])); } 
+  }
+}
 
 // kernels ends from here
 
@@ -866,7 +881,6 @@ static PyObject* py_add_vector_generic(PyObject* self, PyObject* args, const cha
   return PyLong_FromVoidPtr(device_result_ptr);
 }
 
-
 static PyObject* py_add_short(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "short"); }
 static PyObject* py_add_int(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "int"); }
 static PyObject* py_add_long(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "long"); }
@@ -966,6 +980,69 @@ static PyObject* py_cast_double2complex(PyObject* self, PyObject* args){
   return py_result_ptr;
 }
 
+static PyObject* py_cast_complex2long(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  cuDoubleComplex* host = (cuDoubleComplex*)malloc(size * sizeof(cuDoubleComplex));
+  CUDA_CHECK(cudaMemcpy(host, device_ptr, size * sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost));
+  for(int i = 0; i < size; i++){
+    if(cuCimag(host[i]) != 0){
+      free(host);
+      PyErr_SetString(PyExc_RuntimeError, "The imaginary part of a complex number must be a zero value");
+      return NULL;
+    }
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(long)));
+  cast_complex2long_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const cuDoubleComplex*>(device_ptr),
+    static_cast<long*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
+static PyObject* py_cast_complex2double(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  cuDoubleComplex* host = (cuDoubleComplex*)malloc(size * sizeof(cuDoubleComplex));
+  CUDA_CHECK(cudaMemcpy(host, device_ptr, size * sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost));
+  for(int i = 0; i < size; i++){
+    if(cuCimag(host[i]) != 0){
+      free(host);
+      PyErr_SetString(PyExc_RuntimeError, "The imaginary part of a complex number must be a zero value");
+      return NULL;
+    }
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(double)));
+  cast_complex2double_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const cuDoubleComplex*>(device_ptr),
+    static_cast<double*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
 
 // ops on vector ENDs from here
 
@@ -1045,6 +1122,8 @@ static PyMethodDef CuManagerMethods[] = {
   {"long2complex", py_cast_long2complex, METH_VARARGS, "convert dtype from long to complex"},
   {"double2long", py_cast_double2long, METH_VARARGS, "convert dtype from double to long"},
   {"double2complex", py_cast_double2complex, METH_VARARGS, "convert dtype from double to complex"},
+  {"complex2long", py_cast_complex2long, METH_VARARGS, "convert dtype from complex to long"},
+  {"complex2double", py_cast_complex2double, METH_VARARGS, "convert dtype from complex to double"},
   {NULL, NULL, 0, NULL}
 };
 
