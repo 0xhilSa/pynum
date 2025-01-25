@@ -107,6 +107,21 @@ __global__ void cast_complex2bool_kernel(const cuDoubleComplex* x, bool* z, size
   }
 }
 
+__global__ void cast_bool2long_kernel(const bool* x, long* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<long>(x[index]); }
+}
+
+__global__ void cast_bool2double_kernel(const bool* x, double* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<double>(x[index]); }
+}
+
+__global__ void cast_bool2complex_kernel(const bool* x, cuDoubleComplex* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = make_cuDoubleComplex(static_cast<double>(x[index]), 0.0); }
+}
+
 // kernels ends from here
 
 static PyObject* py_cuda_alloc_generic(PyObject* self, PyObject* args, size_t element_size){
@@ -929,6 +944,29 @@ static PyObject* py_cast_long2double(PyObject* self, PyObject* args){
   return py_result_ptr;
 }
 
+static PyObject* py_cast_long2complex(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+  cast_long2complex_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const long*>(device_ptr),
+    static_cast<cuDoubleComplex*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
 static PyObject* py_cast_long2bool(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
   Py_ssize_t size;
@@ -961,36 +999,13 @@ static PyObject* py_cast_double2long(PyObject* self, PyObject* args){
     PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
     return NULL;
   }
-  void* device_result_ptr = NULL;
+  void* device_result_ptr = nullptr;
   int threads_per_block = 256;
   int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
   CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(long)));
   cast_double2long_kernel<<<blocks_per_grid, threads_per_block>>>(
     static_cast<const double*>(device_ptr),
     static_cast<long*>(device_result_ptr),
-    size
-  );
-  CUDA_CHECK(cudaGetLastError());
-  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
-  return py_result_ptr;
-}
-
-static PyObject* py_cast_long2complex(PyObject* self, PyObject* args){
-  PyObject* py_device_ptr;
-  Py_ssize_t size;
-  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
-  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
-  if(device_ptr == NULL){
-    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
-    return NULL;
-  }
-  void* device_result_ptr = nullptr;
-  int threads_per_block = 256;
-  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
-  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
-  cast_long2complex_kernel<<<blocks_per_grid, threads_per_block>>>(
-    static_cast<const long*>(device_ptr),
-    static_cast<cuDoubleComplex*>(device_result_ptr),
     size
   );
   CUDA_CHECK(cudaGetLastError());
@@ -1131,7 +1146,140 @@ static PyObject* py_cast_complex2bool(PyObject* self, PyObject* args){
   return py_result_ptr;
 }
 
+static PyObject* py_cast_bool2long(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(long)));
+  cast_bool2long_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const bool*>(device_ptr),
+    static_cast<long*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
+static PyObject* py_cast_bool2double(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(double)));
+  cast_bool2double_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const bool*>(device_ptr),
+    static_cast<double*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
+static PyObject* py_cast_bool2complex(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+  cast_bool2complex_kernel<<<blocks_per_grid, threads_per_block>>>(
+    static_cast<const bool*>(device_ptr),
+    static_cast<cuDoubleComplex*>(device_result_ptr),
+    size
+  );
+  CUDA_CHECK(cudaGetLastError());
+  PyObject* py_result_ptr = PyLong_FromVoidPtr(device_result_ptr);
+  return py_result_ptr;
+}
+
 // ops on vector ENDs from here
+
+static PyObject* py_copy_long(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  long* copied_device_ptr = nullptr;
+  CUDA_CHECK(cudaMalloc(&copied_device_ptr, size * sizeof(long)));
+  CUDA_CHECK(cudaMemcpy(copied_device_ptr, device_ptr, size * sizeof(size), cudaMemcpyDeviceToDevice));
+  PyObject* py_copied_result_ptr = PyLong_FromVoidPtr(copied_device_ptr);
+  return py_copied_result_ptr;
+}
+
+static PyObject* py_copy_double(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  double* copied_device_ptr = nullptr;
+  CUDA_CHECK(cudaMalloc(&copied_device_ptr, size * sizeof(double)));
+  CUDA_CHECK(cudaMemcpy(copied_device_ptr, device_ptr, size * sizeof(double), cudaMemcpyDeviceToDevice));
+  PyObject* py_copied_result_ptr = PyLong_FromVoidPtr(copied_device_ptr);
+  return py_copied_result_ptr;
+}
+
+static PyObject* py_copy_complex(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  cuDoubleComplex* copied_device_ptr = nullptr;
+  CUDA_CHECK(cudaMalloc(&copied_device_ptr, size * sizeof(cuDoubleComplex)));
+  CUDA_CHECK(cudaMemcpy(copied_device_ptr, device_ptr, size * sizeof(cuDoubleComplex), cudaMemcpyDeviceToDevice));
+  PyObject* py_copied_result_ptr = PyLong_FromVoidPtr(copied_device_ptr);
+  return py_copied_result_ptr;
+}
+
+static PyObject* py_copy_bool(PyObject* self, PyObject* args){
+  PyObject* py_device_ptr;
+  Py_ssize_t size;
+  if(!PyArg_ParseTuple(args, "On", &py_device_ptr, &size)) return NULL;
+  void* device_ptr = PyLong_AsVoidPtr(py_device_ptr);
+  if(device_ptr == NULL){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid device pointer");
+    return NULL;
+  }
+  bool* copied_device_ptr = nullptr;
+  CUDA_CHECK(cudaMalloc(&copied_device_ptr, size * sizeof(bool)));
+  CUDA_CHECK(cudaMemcpy(copied_device_ptr, device_ptr, size * sizeof(bool), cudaMemcpyDeviceToDevice));
+  PyObject* py_copied_result_ptr = PyLong_FromVoidPtr(copied_device_ptr);
+  return py_copied_result_ptr;
+}
 
 static PyObject* py_count_device(PyObject* self, PyObject* args){
   int count = 0;
@@ -1214,6 +1362,13 @@ static PyMethodDef CuManagerMethods[] = {
   {"complex2long", py_cast_complex2long, METH_VARARGS, "convert dtype from complex to long"},
   {"complex2double", py_cast_complex2double, METH_VARARGS, "convert dtype from complex to double"},
   {"complex2bool", py_cast_complex2bool, METH_VARARGS, "convert dtype from complex to bool"},
+  {"bool2long", py_cast_bool2long, METH_VARARGS, "convert dtype from bool to long"},
+  {"bool2double", py_cast_bool2double, METH_VARARGS, "convert dtype from bool to double"},
+  {"bool2complex", py_cast_bool2complex, METH_VARARGS, "convert dtype from bool to complex"},
+  {"copy_long", py_copy_long, METH_VARARGS, "copy vector"},
+  {"copy_double", py_copy_double, METH_VARARGS, "copy vector"},
+  {"copy_complex", py_copy_complex, METH_VARARGS, "copy vector"},
+  {"copy_bool", py_copy_bool, METH_VARARGS, "copy vector"},
   {NULL, NULL, 0, NULL}
 };
 

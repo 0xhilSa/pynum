@@ -3,7 +3,7 @@ these functions are written in CUDA and
 defined at './pynum/src/cuda_stream.cu'
 """
 
-from typing import List
+from typing import List, Type
 import subprocess
 
 # allocators for different data types
@@ -60,6 +60,7 @@ from .src.cuda_stream import set_value_double
 from .src.cuda_stream import set_value_complex
 from .src.cuda_stream import set_value_bool
 
+# ops on CUDA device
 from .src.cuda_stream import add_short
 from .src.cuda_stream import add_int
 from .src.cuda_stream import add_long
@@ -84,21 +85,14 @@ from .src.cuda_stream import double2bool
 from .src.cuda_stream import complex2long
 from .src.cuda_stream import complex2double
 from .src.cuda_stream import complex2bool
+from .src.cuda_stream import bool2long
+from .src.cuda_stream import bool2double
+from .src.cuda_stream import bool2complex
 
-
-TYPE = [int, float, complex]
-
-class POINTER:
-  """
-  POINTER(ptr) must have its own class to encapsulate the pointer from the other data types
-  e.g. int, float, and complex.
-  """
-  def __init__(self, ptr: int): self.__ptr = ptr
-  def __repr__(self): return f"PTR({self.__ptr})"
-  def __del__(self): del self
-  @property
-  def value(self): return self.__ptr
-
+from .src.cuda_stream import copy_long
+from .src.cuda_stream import copy_double
+from .src.cuda_stream import copy_complex
+from .src.cuda_stream import copy_bool
 
 # check for CUDA device availability
 def is_available():
