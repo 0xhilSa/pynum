@@ -9,6 +9,9 @@
 
 ---
 
+## Accelerator
+- CUDA
+
 ## Installation
 1. Clone this repo and navigate to the cloned dir
 ```bash
@@ -20,9 +23,9 @@ git clone https://github.com/0xhilSa/pynum.git && cd pynum
 bash install.sh
 ```
 
-# Note
+## Note
 See [TODO](https://github.com/0xhilSa/pynum/blob/master/TODO.md) and [ISSUES](https://github.com/0xhilSa/pynum/blob/master/ISSUES.md)  to track the status of PyNum lib
 
-# LICENSE
+## LICENSE
 [MIT](https://github.com/0xhilSa/pynum/tree/master?tab=MIT-1-ov-file#readme)
 
