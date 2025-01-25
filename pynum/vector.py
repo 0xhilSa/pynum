@@ -33,7 +33,7 @@ class Vector:
       elif all(isinstance(x,(int, np.integer)) for x in array): dtype = int
       elif any(isinstance(x,(float,np.floating)) for x in array): dtype = float
       elif all(isinstance(x,bool) for x in array): dtype = bool
-      else: raise InvalidDTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
+      else: raise DTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
     elif dtype not in ALL: raise DTypeError(f"An invalid dtype: '{dtype.__name__}' were given")
     array = [dtype(x) for x in array]
     length = len(array)
