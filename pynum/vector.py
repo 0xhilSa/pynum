@@ -1,11 +1,3 @@
-"""
-TODO:
-=====
-  1. Arithmetic ops
-  2. include LLVM
-"""
-
-
 from __future__ import annotations
 from typing import List, Type, Union
 import numpy as np
@@ -54,6 +46,12 @@ class Vector:
       array = ptr
     else: raise DeviceError(f"Device: '{device}' isn't support/available on this system")
     return array, length, dtype, device.upper()
+  @staticmethod
+  def get_resultant_dtype(x:Vector, y:Vector):
+    if x.__dtype == complex or y.__dtype == complex: return complex
+    elif x.__dtype == int and y.__dtype == int: return int
+    elif x.__dtype == bool and y.__dtype == bool: return bool
+    else: return float
   def __repr__(self): return f"<Vector(length={self.__length}, dtype={self.__dtype.__name__}, device={self.__device}, const={self.__const})>"
   def __len__(self): return self.__length
   def __del__(self):
@@ -160,17 +158,20 @@ class Vector:
   def set_device(self, index:int): select_device(index)
   def astype(self, dtype:Type):
     if dtype not in ALL: raise TypeError(f"Invalid DType: {dtype}, expected from '{ALL}'")
-    if self.__dtype == dtype: return
     if self.__device == "CUDA":
-      if self.__dtype == int and dtype == float: ptr = long2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
+      if self.__dtype == int and dtype == int: return Vector(memcpy_dtoh_long(self.__array, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == int and dtype == float: ptr = long2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == int and dtype == complex: ptr = long2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == int and dtype == bool: ptr = long2bool(self.__array, self.__array); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == float and dtype == float: return Vector(memcpy_dtoh_double(self.__array, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == float and dtype == int: ptr = double2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == float and dtype == complex: ptr = double2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == float and dtype == bool: ptr = double2bool(self.__array, self.__length); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == complex and dtype == complex: return Vector(memcpy_dtoh_complex(self.__array, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == complex and dtype == int: ptr = complex2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == complex and dtype == float: ptr = complex2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == complex and dtype == bool: ptr = complex2bool(self.__array, self.__length); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=dtype, device="CUDA")
+      elif self.__dtype == bool and dtype == bool: return Vector(memcpy_dtoh_bool(self.__array, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == bool and dtype == int: ptr = bool2long(self.__array, self.__length); return Vector(memcpy_dtoh_long(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == bool and dtype == float: ptr = bool2double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=dtype, device="CUDA")
       elif self.__dtype == bool and dtype == complex: ptr = bool2complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=dtype, device="CUDA")
@@ -182,4 +183,86 @@ class Vector:
       elif self.__dtype == float: ptr = copy_double(self.__array, self.__length); return Vector(memcpy_dtoh_double(ptr, self.__length), dtype=self.__dtype, device="CUDA")
       elif self.__dtype == complex: ptr = copy_complex(self.__array, self.__length); return Vector(memcpy_dtoh_complex(ptr, self.__length), dtype=self.__dtype, device="CUDA")
       elif self.__dtype == bool: ptr = copy_bool(self.__array, self.__length); return Vector(memcpy_dtoh_bool(ptr, self.__length), dtype=self.__dtype, device="CUDA")
-  def add(self, x, reverse:bool=False): raise NotImplementedError   # need to refactor it
+  def is_compatible(self, x:Vector): return self.__device == x.__device
+  def add(self, x:Vector, reverse:bool=False):
+    if isinstance(x,(int, float, complex, bool)): raise NotImplementedError
+    elif isinstance(x,Vector):
+      if not self.is_compatible(x): raise DeviceError("Both the vector musts be at the same device")
+      if self.__length != x.__length: raise ValueError("Length of the vectors must be equal")
+      dtype = Vector.get_resultant_dtype(self,x)
+      a,b = self.astype(dtype), x.astype(dtype)
+      if reverse: a,b = b,a
+      if self.__device == "CPU": return Vector([i + j for i,j in zip(a.__array, b.__array)], dtype=dtype, device="CPU")
+      elif self.__device == "CUDA":
+        if a.__dtype == int: ptr = add_long(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_long(ptr, a.__length), dtype=int, device="CUDA")
+        elif a.__dtype == float: ptr = add_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=float, device="CUDA")
+        elif a.__dtype == complex: ptr = add_complex(a.__array, b.__array); return Vector(memcpy_dtoh_complex(ptr, a.__length), dtype=complex, device="CUDA")
+        elif a.__dtype == bool: ptr = add_bool(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_bool(ptr, a.__length), dtype=bool, device="CUDA")
+      del a,b
+    else: raise TypeError(f"Invalid dtype, '{type(x).__name__}'. It could be a 'Vector' or '{ALL}'")
+  def sub(self, x:Vector, reverse:bool=False):
+    if isinstance(x,(int, float, complex, bool)): raise NotImplementedError
+    elif isinstance(x,Vector):
+      if not self.is_compatible(x): raise DeviceError("Both the vectors must be at the same device")
+      if self.__length != x.__length: raise ValueError("Length of the vectors must be equal")
+      dtype = Vector.get_resultant_dtype(self,x)
+      a,b = self.astype(dtype), x.astype(dtype)
+      if reverse: a,b = b,a
+      if self.__device == "CPU": return Vector([i - j for i,j in zip(a.__array, b.__array)], dtype=dtype, device="CPU")
+      elif self.__device == "CUDA":
+        if a.__dtype == int: ptr = sub_long(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_long(ptr, a.__length), dtype=int, device="CUDA")
+        elif a.__dtype == float: ptr = sub_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=float, device="CUDA")
+        elif a.__dtype == complex: ptr = sub_complex(a.__array, b.__array); return Vector(memcpy_dtoh_complex(ptr, a.__length), dtype=complex, device="CUDA")
+        elif a.__dtype == bool: ptr = sub_bool(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_bool(ptr, a.__length), dtype=bool, device="CUDA")
+      del a,b
+    else: raise TypeError(f"Invalid dtype, '{type(x).__name__}'. It could be a 'Vector' or '{ALL}'")
+  def mul(self, x:Vector, reverse:bool=False):
+    if isinstance(x,(int, float, complex, bool)): raise NotImplementedError
+    elif isinstance(x,Vector):
+      if not self.is_compatible(x): raise DeviceError("Both the vectors must be at the same device")
+      if self.__length != x.__length: raise ValueError("Length of the vectors must be equal")
+      dtype = Vector.get_resultant_dtype(self,x)
+      a,b = self.astype(dtype), x.astype(dtype)
+      if reverse: a,b = b,a
+      if self.__device == "CPU": return Vector([i * j for i,j in zip(self.__array,x.__array)], dtype=dtype, device="CPU")
+      elif self.__device == "CUDA":
+        if a.__dtype == int: ptr = mul_long(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_long(ptr, a.__length), dtype=int, device="CUDA")
+        elif a.__dtype == float: ptr = mul_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=float, device="CUDA")
+        elif a.__dtype == complex: ptr = mul_complex(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_complex(ptr, a.__length), dtype=complex, device="CUDA")
+        elif a.__dtype == bool: ptr = mul_bool(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_bool(ptr, a.__length), dtype=bool, device="CUDA")
+      del a,b
+    else: raise TypeError(f"Invalid dtype, '{type(x).__name__}'. It could be a 'Vector' or '{ALL}'")
+  def tdiv(self, x:Vector, reverse:bool=False):
+    if isinstance(x,(int, float, complex, bool)): raise NotImplementedError
+    elif isinstance(x,Vector):
+      if not self.is_compatible(x): raise DeviceError("Both the vectors must be at the same device")
+      if self.__length != x.__length: raise ValueError("Length of the vectors must be equal")
+      dtype = Vector.get_resultant_dtype(self,x)
+      a,b = self.astype(dtype), x.astype(dtype)
+      if reverse: a,b = b,a
+      if self.__device == "CPU": return Vector([i / j for i,j in zip(a.__array, b.__array)], dtype=dtype, device="CPU")
+      elif self.__device == "CUDA":
+        if a.__dtype == int: a,b = a.astype(float),b.astype(float); ptr = tdiv_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=float, device="CUDA")
+        elif a.__dtype == float: ptr = tdiv_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=float, device="CUDA")
+        elif a.__device == complex: ptr = tdiv_complex(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_complex(ptr, a.__length), dtype=complex, device="CUDA")
+        elif a.__device == bool: ptr = tdiv_bool(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_bool(ptr, a.__length), dtype=bool, device="CUDA")
+      del a,b
+    else: raise TypeError(f"Invalid dtype, '{type(x).__name__}'. It could be a 'Vector' or '{ALL}'")
+  def fdiv(self, x:Vector, reverse:bool=False):
+    if isinstance(x,(int, float, complex, bool)): raise NotImplementedError
+    elif isinstance(x,Vector):
+      if not self.is_compatible(x): raise DeviceError("Both the vectors must be at the same device")
+      if self.__length != x.__length: raise ValueError("Length of the vectors must be equal")
+      dtype = Vector.get_resultant_dtype(self,x)
+      a,b = self.astype(dtype), x.astype(dtype)
+      if reverse: a,b = b,a
+      if self.__device == "CPU": return Vector([i // j for i,j in zip(a.__array, b.__array)], dtype=int, device="CPU")
+      elif self.__device == "CUDA":
+        if a.__dtype == int: ptr = fdiv_long(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_long(ptr, a.__length), dtype=int, device="CUDA")
+        elif a.__dtype == float: ptr = fdiv_double(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_double(ptr, a.__length), dtype=int, device="CUDA")
+        elif a.__dtype == complex: ptr = fdiv_complex(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_complex(ptr, a.__length), dtype=complex, device="CUDA")
+        elif a.__dtype == bool: ptr = fdiv_bool(a.__array, b.__array, a.__length); return Vector(memcpy_dtoh_bool(ptr, a.__length), dtype=int, device="CUDA")
+      del a,b
+    else: raise TypeError(f"Invalid dtype, '{type(x).__name__}'. It could be a 'Vector' or '{ALL}'")
+  def mod(self, x:Vector, reverse:bool=False): raise NotImplementedError
+  def pow(self, x:Vector, reverse:bool=False): raise NotImplementedError
