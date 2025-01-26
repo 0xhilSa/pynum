@@ -13,7 +13,7 @@
 - CUDA
 
 ## Installation
-1. Clone this repo and navigate to the cloned dir
+1. Clone this repo and navigate to the pynum dir
 ```bash
 git clone https://github.com/0xhilSa/pynum.git && cd pynum
 ```
