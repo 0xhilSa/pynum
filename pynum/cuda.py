@@ -67,6 +67,34 @@ from .src.cuda_stream import add_long
 from .src.cuda_stream import add_float
 from .src.cuda_stream import add_double
 from .src.cuda_stream import add_complex
+from .src.cuda_stream import add_bool
+from .src.cuda_stream import sub_short
+from .src.cuda_stream import sub_int
+from .src.cuda_stream import sub_long
+from .src.cuda_stream import sub_float
+from .src.cuda_stream import sub_double
+from .src.cuda_stream import sub_complex
+from .src.cuda_stream import sub_bool
+from .src.cuda_stream import mul_short
+from .src.cuda_stream import mul_int
+from .src.cuda_stream import mul_long
+from .src.cuda_stream import mul_double
+from .src.cuda_stream import mul_complex
+from .src.cuda_stream import mul_bool
+from .src.cuda_stream import tdiv_short
+from .src.cuda_stream import tdiv_int
+from .src.cuda_stream import tdiv_long
+from .src.cuda_stream import tdiv_float
+from .src.cuda_stream import tdiv_double
+from .src.cuda_stream import tdiv_complex
+from .src.cuda_stream import tdiv_bool
+from .src.cuda_stream import fdiv_short
+from .src.cuda_stream import fdiv_int
+from .src.cuda_stream import fdiv_long
+from .src.cuda_stream import fdiv_float
+from .src.cuda_stream import fdiv_double
+from .src.cuda_stream import fdiv_complex
+from .src.cuda_stream import fdiv_bool
 
 # freebie
 from .src.cuda_stream import free
