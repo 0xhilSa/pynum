@@ -33,6 +33,55 @@ __global__ void add_kernel_complex(const cuDoubleComplex* x, const cuDoubleCompl
   }
 }
 
+template<typename T>
+__global__ void sub_kernel_generic(const T* x, const T* y, T* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = x[index] - y[index]; }
+}
+
+__global__ void sub_kernel_complex(const cuDoubleComplex* x, const cuDoubleComplex* y, cuDoubleComplex* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){
+    z[index] = make_cuDoubleComplex(
+      cuCreal(x[index]) - cuCreal(y[index]), 
+      cuCimag(x[index]) - cuCimag(y[index])
+    );
+  }
+}
+
+template<typename T>
+__global__ void mul_kernel_generic(const T* x, const T* y, T* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = x[index] * y[index]; }
+}
+
+__global__ void mul_kernel_complex(const cuDoubleComplex* x, const cuDoubleComplex* y, cuDoubleComplex* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = cuCmul(x[index], y[index]); }
+}
+
+template<typename T>
+__global__ void tdiv_kernel_generic(const T* x, const T* y, T* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = x[index] / y[index]; }
+}
+
+__global__ void tdiv_kernel_complex(const cuDoubleComplex* x, const cuDoubleComplex* y, cuDoubleComplex* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = cuCdiv(x[index], y[index]); }
+}
+
+template<typename T>
+__global__ void fdiv_kernel_generic(const T* x, const T* y, T* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = static_cast<int>(x[index] / y[index]); }
+}
+
+__global__ void fdiv_kernel_complex(const cuDoubleComplex* x, const cuDoubleComplex* y, cuDoubleComplex* z, size_t size){
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  if(index < size){ z[index] = cuCdiv(x[index], y[index]); }
+}
+
 __global__ void cast_shor2int_kernel(const short* x, int* z, size_t size){
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   if(index < size){ z[index] = static_cast<int>(x[index]); }
@@ -905,6 +954,14 @@ static PyObject* py_add_vector_generic(PyObject* self, PyObject* args, const cha
       static_cast<cuDoubleComplex*>(device_result_ptr),
       size
     );   
+  }else if(strcmp(dtype, "bool") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+    add_kernel_generic<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<bool*>(device_ptr1),
+      static_cast<bool*>(device_ptr2),
+      static_cast<bool*>(device_result_ptr),
+      size
+    );
   }else{
     PyErr_SetString(PyExc_ValueError, "Unsupported dtype");
     return NULL;
@@ -914,12 +971,378 @@ static PyObject* py_add_vector_generic(PyObject* self, PyObject* args, const cha
   return PyLong_FromVoidPtr(device_result_ptr);
 }
 
+static PyObject* py_sub_vector_generic(PyObject* self, PyObject* args, const char* dtype){
+  PyObject* py_device_ptr1;
+  PyObject* py_device_ptr2;
+  Py_ssize_t size;
+
+  if(!PyArg_ParseTuple(args, "OOn", &py_device_ptr1, &py_device_ptr2, &size)) return NULL;
+
+  void* device_ptr1 = PyLong_AsVoidPtr(py_device_ptr1);
+  void* device_ptr2 = PyLong_AsVoidPtr(py_device_ptr2);
+
+  if(device_ptr1 == NULL || device_ptr2 == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  if(strcmp(dtype, "short") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(short)));
+    sub_kernel_generic<short><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<short*>(device_ptr1),
+      static_cast<short*>(device_ptr2),
+      static_cast<short*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "int") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(int)));
+    sub_kernel_generic<int><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<int*>(device_ptr1),
+      static_cast<int*>(device_ptr2),
+      static_cast<int*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "long") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(long)));
+    sub_kernel_generic<long><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<long*>(device_ptr1),
+      static_cast<long*>(device_ptr2),
+      static_cast<long*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "float") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(float)));
+    sub_kernel_generic<float><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<float*>(device_ptr1),
+      static_cast<float*>(device_ptr2),
+      static_cast<float*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "double") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(double)));
+    sub_kernel_generic<double><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<double*>(device_ptr1),
+      static_cast<double*>(device_ptr2),
+      static_cast<double*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "cuDoubleComplex") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+    sub_kernel_complex<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<cuDoubleComplex*>(device_ptr1),
+      static_cast<cuDoubleComplex*>(device_ptr2),
+      static_cast<cuDoubleComplex*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "bool") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+    sub_kernel_generic<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<bool*>(device_ptr1),
+      static_cast<bool*>(device_ptr2),
+      static_cast<bool*>(device_result_ptr),
+      size
+    );
+  }else{
+    PyErr_SetString(PyExc_ValueError, "Unsupported dtype");
+    return NULL;
+  }
+
+  CUDA_CHECK(cudaGetLastError());
+  return PyLong_FromVoidPtr(device_result_ptr);
+}
+
+static PyObject* py_mul_vector_generic(PyObject* self, PyObject* args, const char* dtype){
+  PyObject* py_device_ptr1;
+  PyObject* py_device_ptr2;
+  Py_ssize_t size;
+
+  if(!PyArg_ParseTuple(args, "OOn", &py_device_ptr1, &py_device_ptr2, &size)) return NULL;
+
+  void* device_ptr1 = PyLong_AsVoidPtr(py_device_ptr1);
+  void* device_ptr2 = PyLong_AsVoidPtr(py_device_ptr2);
+
+  if(device_ptr1 == NULL || device_ptr2 == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  if(strcmp(dtype, "short") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(short)));
+    mul_kernel_generic<short><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<short*>(device_ptr1),
+      static_cast<short*>(device_ptr2),
+      static_cast<short*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "int") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(int)));
+    mul_kernel_generic<int><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<int*>(device_ptr1),
+      static_cast<int*>(device_ptr2),
+      static_cast<int*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "long") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(long)));
+    mul_kernel_generic<long><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<long*>(device_ptr1),
+      static_cast<long*>(device_ptr2),
+      static_cast<long*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "float") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(float)));
+    mul_kernel_generic<float><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<float*>(device_ptr1),
+      static_cast<float*>(device_ptr2),
+      static_cast<float*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "double") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(double)));
+    mul_kernel_generic<double><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<double*>(device_ptr1),
+      static_cast<double*>(device_ptr2),
+      static_cast<double*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "cuDoubleComplex") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+    mul_kernel_complex<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<cuDoubleComplex*>(device_ptr1),
+      static_cast<cuDoubleComplex*>(device_ptr2),
+      static_cast<cuDoubleComplex*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "bool") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+    mul_kernel_generic<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<bool*>(device_ptr1),
+      static_cast<bool*>(device_ptr2),
+      static_cast<bool*>(device_result_ptr),
+      size
+    );
+  }else{
+    PyErr_SetString(PyExc_ValueError, "Unsupported dtype");
+    return NULL;
+  }
+
+  CUDA_CHECK(cudaGetLastError());
+  return PyLong_FromVoidPtr(device_result_ptr);
+}
+
+static PyObject* py_tdiv_vector_generic(PyObject* self, PyObject* args, const char* dtype){
+  PyObject* py_device_ptr1;
+  PyObject* py_device_ptr2;
+  Py_ssize_t size;
+
+  if(!PyArg_ParseTuple(args, "OOn", &py_device_ptr1, &py_device_ptr2, &size)) return NULL;
+
+  void* device_ptr1 = PyLong_AsVoidPtr(py_device_ptr1);
+  void* device_ptr2 = PyLong_AsVoidPtr(py_device_ptr2);
+
+  if(device_ptr1 == NULL || device_ptr2 == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  if(strcmp(dtype, "short") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(short)));
+    tdiv_kernel_generic<short><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<short*>(device_ptr1),
+      static_cast<short*>(device_ptr2),
+      static_cast<short*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "int") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(int)));
+    tdiv_kernel_generic<int><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<int*>(device_ptr1),
+      static_cast<int*>(device_ptr2),
+      static_cast<int*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "long") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(long)));
+    tdiv_kernel_generic<long><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<long*>(device_ptr1),
+      static_cast<long*>(device_ptr2),
+      static_cast<long*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "float") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(float)));
+    tdiv_kernel_generic<float><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<float*>(device_ptr1),
+      static_cast<float*>(device_ptr2),
+      static_cast<float*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "double") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(double)));
+    tdiv_kernel_generic<double><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<double*>(device_ptr1),
+      static_cast<double*>(device_ptr2),
+      static_cast<double*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "cuDoubleComplex") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+    tdiv_kernel_complex<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<cuDoubleComplex*>(device_ptr1),
+      static_cast<cuDoubleComplex*>(device_ptr2),
+      static_cast<cuDoubleComplex*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "bool") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+    tdiv_kernel_generic<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<bool*>(device_ptr1),
+      static_cast<bool*>(device_ptr2),
+      static_cast<bool*>(device_result_ptr),
+      size
+    );
+  }else{
+    PyErr_SetString(PyExc_ValueError, "Unsupported dtype");
+    return NULL;
+  }
+
+  CUDA_CHECK(cudaGetLastError());
+  return PyLong_FromVoidPtr(device_result_ptr);
+}
+
+static PyObject* py_fdiv_vector_generic(PyObject* self, PyObject* args, const char* dtype){
+  PyObject* py_device_ptr1;
+  PyObject* py_device_ptr2;
+  Py_ssize_t size;
+
+  if(!PyArg_ParseTuple(args, "OOn", &py_device_ptr1, &py_device_ptr2, &size)) return NULL;
+
+  void* device_ptr1 = PyLong_AsVoidPtr(py_device_ptr1);
+  void* device_ptr2 = PyLong_AsVoidPtr(py_device_ptr2);
+
+  if(device_ptr1 == NULL || device_ptr2 == NULL){
+    PyErr_SetString(PyExc_ValueError, "Invalid device pointer");
+    return NULL;
+  }
+
+  void* device_result_ptr = nullptr;
+  int threads_per_block = 256;
+  int blocks_per_grid = (size + threads_per_block - 1) / threads_per_block;
+  if(strcmp(dtype, "short") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(short)));
+    fdiv_kernel_generic<short><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<short*>(device_ptr1),
+      static_cast<short*>(device_ptr2),
+      static_cast<short*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "int") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(int)));
+    fdiv_kernel_generic<int><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<int*>(device_ptr1),
+      static_cast<int*>(device_ptr2),
+      static_cast<int*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "long") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(long)));
+    fdiv_kernel_generic<long><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<long*>(device_ptr1),
+      static_cast<long*>(device_ptr2),
+      static_cast<long*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "float") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(float)));
+    fdiv_kernel_generic<float><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<float*>(device_ptr1),
+      static_cast<float*>(device_ptr2),
+      static_cast<float*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "double") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr,size * sizeof(double)));
+    fdiv_kernel_generic<double><<<blocks_per_grid, threads_per_block>>>(
+      static_cast<double*>(device_ptr1),
+      static_cast<double*>(device_ptr2),
+      static_cast<double*>(device_result_ptr),
+      size
+    );
+  }else if(strcmp(dtype, "cuDoubleComplex") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(cuDoubleComplex)));
+    fdiv_kernel_complex<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<cuDoubleComplex*>(device_ptr1),
+      static_cast<cuDoubleComplex*>(device_ptr2),
+      static_cast<cuDoubleComplex*>(device_result_ptr),
+      size
+    );   
+  }else if(strcmp(dtype, "bool") == 0){
+    CUDA_CHECK(cudaMalloc(&device_result_ptr, size * sizeof(bool)));
+    fdiv_kernel_generic<<<blocks_per_grid, threads_per_block>>>(
+      static_cast<bool*>(device_ptr1),
+      static_cast<bool*>(device_ptr2),
+      static_cast<bool*>(device_result_ptr),
+      size
+    );
+  }else{
+    PyErr_SetString(PyExc_ValueError, "Unsupported dtype");
+    return NULL;
+  }
+
+  CUDA_CHECK(cudaGetLastError());
+  return PyLong_FromVoidPtr(device_result_ptr);
+}
+
+
 static PyObject* py_add_short(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "short"); }
 static PyObject* py_add_int(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "int"); }
 static PyObject* py_add_long(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "long"); }
 static PyObject* py_add_float(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "float"); }
 static PyObject* py_add_double(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "double"); }
 static PyObject* py_add_complex(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "cuDoubleComplex"); }
+static PyObject* py_add_bool(PyObject* self, PyObject* args){ return py_add_vector_generic(self, args, "bool"); }
+
+static PyObject* py_sub_short(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "short"); }
+static PyObject* py_sub_int(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "int"); }
+static PyObject* py_sub_long(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "long"); }
+static PyObject* py_sub_float(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "float"); }
+static PyObject* py_sub_double(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "double"); }
+static PyObject* py_sub_complex(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "cuDoubleComplex"); }
+static PyObject* py_sub_bool(PyObject* self, PyObject* args){ return py_sub_vector_generic(self, args, "bool"); }
+
+static PyObject* py_mul_short(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "short"); }
+static PyObject* py_mul_int(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "int"); }
+static PyObject* py_mul_long(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "long"); }
+static PyObject* py_mul_float(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "float"); }
+static PyObject* py_mul_double(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "double"); }
+static PyObject* py_mul_complex(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "cuDoubleComplex"); }
+static PyObject* py_mul_bool(PyObject* self, PyObject* args){ return py_mul_vector_generic(self, args, "bool"); }
+
+static PyObject* py_tdiv_short(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "short"); }
+static PyObject* py_tdiv_int(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "int"); }
+static PyObject* py_tdiv_long(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "long"); }
+static PyObject* py_tdiv_float(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "float"); }
+static PyObject* py_tdiv_double(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "double"); }
+static PyObject* py_tdiv_complex(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "cuDoubleComplex"); }
+static PyObject* py_tdiv_bool(PyObject* self, PyObject* args){ return py_tdiv_vector_generic(self, args, "bool"); }
+
+static PyObject* py_fdiv_short(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "short"); }
+static PyObject* py_fdiv_int(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "int"); }
+static PyObject* py_fdiv_long(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "long"); }
+static PyObject* py_fdiv_float(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "float"); }
+static PyObject* py_fdiv_double(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "double"); }
+static PyObject* py_fdiv_complex(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "cuDoubleComplex"); }
+static PyObject* py_fdiv_bool(PyObject* self, PyObject* args){ return py_fdiv_vector_generic(self, args, "bool"); }
 
 static PyObject* py_cast_long2double(PyObject* self, PyObject* args){
   PyObject* py_device_ptr;
@@ -1344,12 +1767,41 @@ static PyMethodDef CuManagerMethods[] = {
   {"set_value_double", py_set_value_double, METH_VARARGS, "set double value from the device to a specific index"},
   {"set_value_complex", py_set_value_complex, METH_VARARGS, "set complex value from the device to a specific index"},
   {"set_value_bool", py_set_value_bool, METH_VARARGS, "set bool value from the device to a specific index"},
-  {"add_short", py_add_short, METH_VARARGS, "returns the poiter of an summed arrray for short dtype"},
-  {"add_int", py_add_int, METH_VARARGS, "returns the poiter of an summed arrray for int dtype"},
-  {"add_long", py_add_long, METH_VARARGS, "returns the poiter of an summed arrray for long dtype"},
-  {"add_float", py_add_float, METH_VARARGS, "returns the poiter of an summed arrray for float dtype"},
-  {"add_double", py_add_double, METH_VARARGS, "returns the poiter of an summed arrray for double dtype"},
-  {"add_complex", py_add_complex, METH_VARARGS, "returns the poiter of an summed arrray for complex dtype"},
+  {"add_short", py_add_short, METH_VARARGS, "returns the pointer of a summed arrray for short dtype"},
+  {"add_int", py_add_int, METH_VARARGS, "returns the pointer of a summed arrray for int dtype"},
+  {"add_long", py_add_long, METH_VARARGS, "returns the pointer of a summed arrray for long dtype"},
+  {"add_float", py_add_float, METH_VARARGS, "returns the pointer of a summed arrray for float dtype"},
+  {"add_double", py_add_double, METH_VARARGS, "returns the pointer of a summed arrray for double dtype"},
+  {"add_complex", py_add_complex, METH_VARARGS, "returns the pointer of a summed arrray for complex dtype"},
+  {"add_bool", py_add_bool, METH_VARARGS, "returns the pointer of a summed array for bool dtype"},
+  {"sub_short", py_sub_short, METH_VARARGS, "returns the pointer of a subtracted arrray for short dtype"},
+  {"sub_int", py_sub_int, METH_VARARGS, "returns the pointer of a subtracted array for int dtype"},
+  {"sub_long", py_sub_long, METH_VARARGS, "returns the pointer of a subtracted array for long dtype"},
+  {"sub_float", py_sub_float, METH_VARARGS, "returns the pointer of a subtracted array for float dtype"},
+  {"sub_double", py_sub_double, METH_VARARGS, "returns the pointer of a subtracted array for double dtype"},
+  {"sub_complex", py_sub_complex, METH_VARARGS, "returns the pointer of a subtracted array for complex dtype"},
+  {"sub_bool", py_sub_bool, METH_VARARGS, "returns the pointer of a subtracted array for bool dtype"},
+  {"mul_short", py_mul_short, METH_VARARGS, "returns the pointer of a multiplied array for short dtype"},
+  {"mul_int", py_mul_int, METH_VARARGS, "returns the pointer of a multiplied array for int dtype"},
+  {"mul_long", py_mul_long, METH_VARARGS, "returns the pointer of a multiplied array for long dtype"},
+  {"mul_float", py_mul_float, METH_VARARGS, "returns the pointer of a multiplied array for float dtype"},
+  {"mul_double", py_mul_double, METH_VARARGS, "returns the pointer of a multiplied array for double dtype"},
+  {"mul_complex", py_mul_complex, METH_VARARGS, "returns the pointer of a multiplied array for complex dtype"},
+  {"mul_bool", py_mul_bool, METH_VARARGS, "returns the pointer of a multiplied array for bool dtype"},
+  {"tdiv_short", py_tdiv_short, METH_VARARGS, "returns the pointer of a division array for short dtype"},
+  {"tdiv_int", py_tdiv_int, METH_VARARGS, "returns the pointer of a division array for int dtype"},
+  {"tdiv_long", py_tdiv_long, METH_VARARGS, "returns the pointer of a division array for long dtype"},
+  {"tdiv_float", py_tdiv_float, METH_VARARGS, "returns the pointer of a division array for float dtype"},
+  {"tdiv_double", py_tdiv_double, METH_VARARGS, "returns the pointer of a division array for double dtype"},
+  {"tdiv_complex", py_tdiv_complex, METH_VARARGS, "returns the pointer of a division array for complex dtype"},
+  {"tdiv_bool", py_tdiv_bool, METH_VARARGS, "returns the pointer of a division array for bool dtype"},
+  {"fdiv_short", py_fdiv_short, METH_VARARGS, "returns the pointer of a floor division array for short dtype"},
+  {"fdiv_int", py_fdiv_int, METH_VARARGS, "returns the pointer of a floor division array for int dtype"},
+  {"fdiv_long", py_fdiv_long, METH_VARARGS, "returns the pointer of a floor division array for long dtype"},
+  {"fdiv_float", py_fdiv_float, METH_VARARGS, "returns the pointer of a floor division array for float dtype"},
+  {"fdiv_double", py_fdiv_double, METH_VARARGS, "returns the pointer of a floor division array for double dtype"},
+  {"fdiv_complex", py_fdiv_complex, METH_VARARGS, "returns the pointer of a floor division array for complex dtype"},
+  {"fdiv_bool", py_fdiv_bool, METH_VARARGS, "returns the pointer of a floor division array for bool dtype"},
   {"count_device", py_count_device, METH_VARARGS, "returns the number of CUDA device available"},
   {"select_device", py_cuda_select_device, METH_VARARGS, "select the CUDA device through device index"},
   {"free", py_cuda_free, METH_VARARGS, "free the pointer"},
