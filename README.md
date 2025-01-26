@@ -24,8 +24,7 @@ bash install.sh
 ```
 
 ## Note
-See [TODO](https://github.com/0xhilSa/pynum/blob/master/TODO.md) and [ISSUES](https://github.com/0xhilSa/pynum/blob/master/ISSUES.md)  to track the status of PyNum lib
+See [TODO](https://github.com/0xhilSa/pynum/blob/master/TODO.md) and [ISSUES](https://github.com/0xhilSa/pynum/blob/master/ISSUES.md) to track the status
 
 ## LICENSE
 [MIT](https://github.com/0xhilSa/pynum/tree/master?tab=MIT-1-ov-file#readme)
-
