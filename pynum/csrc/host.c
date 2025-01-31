@@ -70,13 +70,12 @@ static PyObject* py_list(PyObject* self, PyObject* args){
       ((double complex*)array)[i] = (double)PyComplex_RealAsDouble(item) + (double)PyComplex_ImagAsDouble(item) * I;
     }
   }else if(strcmp(fmt, "G") == 0){
-    array = malloc(length * sizeof(long double complex*));
+    array = malloc(length * sizeof(long double complex));
     for(size_t i = 0; i < length; i++){
       PyObject* item = PyList_GetItem(py_list, i);
-      ((long double*)array)[i] = (long double)PyComplex_RealAsDouble(item) + (long double)PyComplex_ImagAsDouble(item) * I;
+      ((long double complex*)array)[i] = (long double)PyComplex_RealAsDouble(item) + (long double)PyComplex_ImagAsDouble(item) * I;
     }
-  }
-  else if(strcmp(fmt, "?") == 0){
+  }else if(strcmp(fmt, "?") == 0){
     array = malloc(length * sizeof(bool));
     for(size_t i = 0; i < length; i++){ ((bool*)array)[i] = PyObject_IsTrue(PyList_GetItem(py_list, i)); }
   }else{
@@ -122,6 +121,7 @@ static PyObject* py_list_from_capsule(PyObject* self, PyObject* args){
     else if(strcmp(fmt, "d") == 0){ PyList_SetItem(py_list, i, PyFloat_FromDouble(((double*)array)[i])); }
     else if(strcmp(fmt, "F") == 0){ PyList_SetItem(py_list, i, PyComplex_FromDoubles(crealf(((float complex*)array)[i]), cimagf(((float complex*)array)[i]))); }
     else if(strcmp(fmt, "D") == 0){ PyList_SetItem(py_list, i, PyComplex_FromDoubles(creal(((double complex*)array)[i]), cimag(((double complex*)array)[i]))); }
+    else if(strcmp(fmt, "G") == 0){ PyList_SetItem(py_list, i, PyComplex_FromDoubles(creall(((long double complex*)array)[i]), cimagl(((long double complex*)array)[i]))); }
     else if(strcmp(fmt, "?") == 0){ PyList_SetItem(py_list, i, PyBool_FromLong(((bool*)array)[i])); }
     else{
       PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);

@@ -25,15 +25,15 @@ for DIR in "${DIRS[@]}"; do
 done
 
 # Check for shared files
-echo -e "${CYAN}Checking for required shared files...${NC}"
-for SHARED_FILE in "${SHARED_FILES[@]}"; do
-  if [ ! -f "./pynum/src/$SHARED_FILE" ]; then
-    echo -e "${RED}Error: Required shared file not found: $SHARED_FILE${NC}"
-    exit 1
-  else
-    echo -e "${GREEN}Found shared file: $SHARED_FILE${NC}"
-  fi
-done
+#echo -e "${CYAN}Checking for required shared files...${NC}"
+#for SHARED_FILE in "${SHARED_FILES[@]}"; do
+#  if [ ! -f "./pynum/src/$SHARED_FILE" ]; then
+#    echo -e "${RED}Error: Required shared file not found: $SHARED_FILE${NC}"
+#    exit 1
+#  else
+#    echo -e "${GREEN}Found shared file: $SHARED_FILE${NC}"
+#  fi
+#done
 
 # Check for setup.py file
 echo -e "${CYAN}Checking for setup.py...${NC}"
