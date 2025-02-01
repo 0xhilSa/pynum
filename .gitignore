@@ -4,3 +4,4 @@ pynum.egg-info
 dist
 .vscode
 test.*
+pynum/csrc/*.so
