@@ -1,8 +1,3 @@
-"""
-these functions are written in CUDA and
-defined at './pynum/src/cuda_stream.cu'
-"""
-
 from typing import List, Type
 import subprocess
 
