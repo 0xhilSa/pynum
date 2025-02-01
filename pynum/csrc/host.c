@@ -9,7 +9,7 @@ static void free_capsule(PyObject* capsule){
 }
 
 static PyObject* py_list(PyObject* self, PyObject* args){
-  PyObject * py_list;
+  PyObject* py_list;
   const char* fmt;
   if(!PyArg_ParseTuple(args, "Os", &py_list, &fmt)) return NULL;
   if(!PyList_Check(py_list)){
@@ -89,9 +89,9 @@ static PyObject* py_list(PyObject* self, PyObject* args){
 
 static PyObject* py_list_from_capsule(PyObject* self, PyObject* args){
   PyObject* capsule;
-  const char* fmt;
   Py_ssize_t length;
-  if(!PyArg_ParseTuple(args, "Osn", &capsule, &fmt, &length)){ return NULL; }
+  const char* fmt;
+  if(!PyArg_ParseTuple(args, "Ons", &capsule, &length, &fmt)){ return NULL; }
   if(!PyCapsule_CheckExact(capsule)){
     PyErr_SetString(PyExc_TypeError, "Expected a PyCapsule");
     return NULL;
@@ -132,10 +132,52 @@ static PyObject* py_list_from_capsule(PyObject* self, PyObject* args){
   return py_list;
 }
 
+static PyObject* py_get_value(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t index;
+  const char* fmt;
+  if(!PyArg_ParseTuple(args, "Ons", &capsule, &index, &fmt)) return NULL;
+  if(!PyCapsule_CheckExact(capsule)){
+    PyErr_SetString(PyExc_TypeError, "Invalid PyCapsule");
+    return NULL;
+  }
+  void* array = PyCapsule_GetPointer(capsule, "array_pointer");
+  if(!array){
+    PyErr_SetString(PyExc_ValueError, "Invalid PyCapsule");
+    return NULL;
+  }
+  if(index < 0){
+    PyErr_SetString(PyExc_IndexError, "Index cannot be negative");
+    return NULL;
+  }
+  if(strcmp(fmt, "b") == 0) return PyLong_FromLong(((char*)array)[index]);
+  else if(strcmp(fmt, "B") == 0) return PyLong_FromUnsignedLong(((unsigned char*)array)[index]);
+  else if(strcmp(fmt, "h") == 0) return PyLong_FromLong(((short*)array)[index]);
+  else if(strcmp(fmt, "H") == 0) return PyLong_FromLong(((unsigned short*)array)[index]);
+  else if(strcmp(fmt, "i") == 0) return PyLong_FromLong(((int*)array)[index]);
+  else if(strcmp(fmt, "I") == 0) return PyLong_FromUnsignedLong(((unsigned int*)array)[index]);
+  else if(strcmp(fmt, "l") == 0) return PyLong_FromLong(((long*)array)[index]);
+  else if(strcmp(fmt, "L") == 0) return PyLong_FromUnsignedLong(((unsigned long*)array)[index]);
+  else if(strcmp(fmt, "q") == 0) return PyLong_FromLongLong(((long long*)array)[index]);
+  else if(strcmp(fmt, "Q") == 0) return PyLong_FromUnsignedLongLong(((unsigned long long*)array)[index]);
+  else if(strcmp(fmt, "f") == 0) return PyFloat_FromDouble(((float*)array)[index]);
+  else if(strcmp(fmt, "d") == 0) return PyFloat_FromDouble(((double*)array)[index]);
+  else if(strcmp(fmt, "g") == 0) return PyFloat_FromDouble(((long double*)array)[index]);
+  else if(strcmp(fmt, "F") == 0) return PyComplex_FromDoubles(crealf(((float complex*)array)[index]), cimagf(((float complex*)array)[index]));
+  else if(strcmp(fmt, "D") == 0) return PyComplex_FromDoubles(creal(((double complex*)array)[index]), cimag(((double complex*)array)[index]));
+  else if(strcmp(fmt, "G") == 0) return PyComplex_FromDoubles(creall(((long double complex*)array)[index]), cimagl(((long double complex*)array)[index]));
+  else if(strcmp(fmt, "?") == 0) return PyBool_FromLong(((bool*)array)[index]);
+  else{
+    PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+    return NULL;
+  }
+}
+
 
 static PyMethodDef Methods[] = {
   {"array", py_list, METH_VARARGS, "create an array with only one king of dtype"},
   {"toList", py_list_from_capsule, METH_VARARGS, "get python list from the the capsule"},
+  {"get", py_get_value, METH_VARARGS, "get value by index"},
   {NULL, NULL, 0, NULL}
 };
 
