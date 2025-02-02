@@ -152,28 +152,10 @@ static PyObject* py_get_value(PyObject* self, PyObject* args){
     PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
     return NULL;
   }
-  void* host_value = malloc(element_size);
-  if(!host_value){
-    PyErr_SetString(PyExc_MemoryError, "Failed to allocate host memory");
-    return NULL;
-  }
-  cudaMemcpy(host_value, (char*)device_ptr + index * element_size, element_size, cudaMemcpyDeviceToHost);
-  PyObject* result = NULL;
-  if(strcmp(fmt, "b") == 0) result = PyLong_FromLong(*(char*)host_value);
-  else if(strcmp(fmt, "B") == 0) result = PyLong_FromUnsignedLong(*(unsigned char*)host_value);
-  else if(strcmp(fmt, "h") == 0) result = PyLong_FromLong(*(short*)host_value);
-  else if(strcmp(fmt, "H") == 0) result = PyLong_FromUnsignedLong(*(unsigned short*)host_value);
-  else if(strcmp(fmt, "i") == 0) result = PyLong_FromLong(*(int*)host_value);
-  else if(strcmp(fmt, "I") == 0) result = PyLong_FromUnsignedLong(*(unsigned int*)host_value);
-  else if(strcmp(fmt, "l") == 0) result = PyLong_FromLong(*(long*)host_value);
-  else if(strcmp(fmt, "L") == 0) result = PyLong_FromUnsignedLong(*(unsigned long*)host_value);
-  else if(strcmp(fmt, "q") == 0) result = PyLong_FromLongLong(*(long long*)host_value);
-  else if(strcmp(fmt, "Q") == 0) result = PyLong_FromUnsignedLongLong(*(unsigned long long*)host_value);
-  else if(strcmp(fmt, "f") == 0) result = PyFloat_FromDouble(*(float*)host_value);
-  else if(strcmp(fmt, "d") == 0) result = PyFloat_FromDouble(*(double*)host_value);
-  else if(strcmp(fmt, "?") == 0) result = PyBool_FromLong(*(bool*)host_value);
-  free(host_value);
-  return result;
+  void* device_result_ptr = NULL;
+  CUDA_CHECK(cudaMalloc(&device_result_ptr, element_size));
+  CUDA_CHECK(cudaMemcpy(device_result_ptr, (char*)device_ptr + index * element_size, element_size, cudaMemcpyDeviceToDevice));
+  return PyCapsule_New(device_result_ptr, "cuda_array_pointer", cuda_free);
 }
 
 static PyMethodDef Methods[] = {
