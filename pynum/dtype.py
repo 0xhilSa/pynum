@@ -34,3 +34,10 @@ floatcomplex = complex64 = DType("float complex", "F")
 doublecomplex = complex128 = DType("double complex", "D")
 longdoublecomplex = complex256 = DType("long double complex", "G")
 bool_ = DType("bool", "?")
+
+SIGNED_INTEGERS = (int, int8, int16, int32, int64, longlong)
+UNSIGNED_INTEGERS = (uint8, uint16, uint32, uint64, ulonglong)
+FLOATING = (float, float32, float64, longdouble)
+COMPLEX = (complex, complex64, complex128, complex256)
+BOOL = (bool, bool_)
+VALID_DTYPE = SIGNED_INTEGERS + UNSIGNED_INTEGERS + FLOATING + COMPLEX + BOOL
