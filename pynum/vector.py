@@ -21,6 +21,7 @@ class Vector:
     if dtype == int: dtype = int64
     elif dtype == float: dtype = float64
     elif dtype == complex: dtype = complex128
+    elif dtype == bool: dtype = bool_
     length = len(array)
     if device.lower() == "cpu": array = host.array(array, dtype.fmt)
     elif device.lower() == "cuda": array = pycu.toCuda(host.array(array, dtype.fmt), length, dtype.fmt)
@@ -35,9 +36,16 @@ class Vector:
   def is_const(self): return self.__const
   def list(self):
     if self.__device == "cuda": return host.toList(pycu.toHost(self.__pointer, self.__length, self.__dtype.fmt), self.__length, self.__dtype.fmt)
-    return host.toList(self.__pointer, self.fmt, self.__length)
+    return host.toList(self.__pointer, self.__length, self.__dtype.fmt)
   def numpy(self): return np.array(self.list())
+  def astype(self, dtype:Union[Type,DType]):
+    if dtype == int: dtype = int64
+    elif dtype == float: dtype = float64
+    elif dtype == complex: dtype = complex128
+    elif dtype == bool: dtype = bool_
   def __getitem__(self, index:int):
     if not (0 <= index < self.__length): raise IndexError(f"Index: {index} is out of bound!")
     if self.__device == "cpu": return Vector([host.get(self.__pointer, index, self.fmt)], dtype=self.__dtype)
-    elif self.__device == "cuda": return Vector([pycu.get(self.__pointer, index, self.__dtype.fmt)], dtype=self.__dtype)
+    elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(pycu.get(self.__pointer, index, self.__dtype.fmt), 1, self.__dtype.fmt), 1, self.__dtype.fmt), dtype=self.__dtype, device=self.__device)
+  def __setitem__(self, index:int, value):
+    pass
