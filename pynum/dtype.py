@@ -17,7 +17,7 @@ class DType:
   def priority(self): return self.priority
 
 # pre-defined dtypes for backend
-bool_:Final[DType] = DType.new("bool", "?", 0)
+boolean:Final[DType] = DType.new("boolean", "?", 0)
 int8:Final[DType] = DType.new("char", "b", 1)
 uint8:Final[DType] = DType.new("unsigned char", "B", 2)
 int16:Final[DType] = DType.new("short", "h", 3)
@@ -39,5 +39,5 @@ SIGNED_INTEGERS = (int, int8, int16, int32, int64, longlong)
 UNSIGNED_INTEGERS = (uint8, uint16, uint32, uint64, ulonglong)
 FLOATING = (float, float32, float64, longdouble)
 COMPLEX = (complex, complex64, complex128, complex256)
-BOOL = (bool, bool_)
+BOOL = (bool, boolean)
 VALID_DTYPE = SIGNED_INTEGERS + UNSIGNED_INTEGERS + FLOATING + COMPLEX + BOOL
