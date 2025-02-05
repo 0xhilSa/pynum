@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import List, Type, Union
 import numpy as np
-import random
-from graphviz import Digraph
 
 # pre-defined
 from .csrc import host, pycu
@@ -43,9 +41,22 @@ class Vector:
     elif dtype == float: dtype = float64
     elif dtype == complex: dtype = complex128
     elif dtype == bool: dtype = bool_
-  def __getitem__(self, index:int):
-    if not (0 <= index < self.__length): raise IndexError(f"Index: {index} is out of bound!")
-    if self.__device == "cpu": return Vector([host.get(self.__pointer, index, self.fmt)], dtype=self.__dtype)
-    elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(pycu.get(self.__pointer, index, self.__dtype.fmt), 1, self.__dtype.fmt), 1, self.__dtype.fmt), dtype=self.__dtype, device=self.__device)
-  def __setitem__(self, index:int, value):
-    pass
+  def __getitem__(self, index:Union[int,slice]):
+    if isinstance(index, int):
+      if self.__device == "cpu": return Vector([host.get_by_index(self.__pointer, self.__length, index, self.fmt)], dtype=self.__dtype)
+      elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(pycu.get_by_index(self.__pointer, self.__length, index, self.__dtype.fmt), 1, self.__dtype.fmt), 1, self.__dtype.fmt), dtype=self.__dtype, device=self.__device)
+    elif isinstance(index, slice):
+      start, stop, step = index.start, index.stop, index.step
+      if step is None: step = 1
+      length = int((stop - start) / step)
+      if self.__device == "cpu": return Vector(host.toList(host.get_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt), length, self.__dtype.fmt), dtype=self.__dtype)
+      elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(pycu.get_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt), length, self.__dtype.fmt), length, self.__dtype.fmt), dtype=self.__dtype, device=self.__device)
+  def __setitem__(self, index:Union[int,slice], value):
+    if isinstance(index, int):
+      if self.__device == "cpu": host.set_by_index(self.__pointer, self.__length, index, self.__dtype.fmt, value)
+      elif self.__device == "cuda": pycu.set_by_index(self.__pointer, self.__length, index, self.__dtype.fmt, value)
+    elif isinstance(index, slice):
+      start, stop, step = index.start, index.stop, index.step
+      if step is None: step = 1
+      if self.__device == "cpu": host.set_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt, value)
+      elif self.__device == "cuda": pycu.set_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt, value)
