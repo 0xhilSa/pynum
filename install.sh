@@ -1,6 +1,8 @@
 #!/bin/sh
 
-rm -rf ./build ./dist ./pynum.egg-info
+[ -d "./build" ] && rm -rf ./build
+[ -d "./dist" ] && rm -rf ./dist
+[ -d "./pynum.egg-info" ] && rm -rf ./pynum.egg-info
 pip uninstall -y pynum
 
 cd ./pynum/csrc/
@@ -21,3 +23,4 @@ cd ../..
 
 python3 setup.py sdist bdist_wheel
 pip install ./dist/*whl
+rm -rf ./build ./dist ./pynum.egg-info
