@@ -1,39 +1,39 @@
-class DType:
-  _allowed_formats = {
-    "b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d", "F", "D", "g", "G", "?"
-  }
-  def __init__(self, name:str, fmt:str):
-    if not isinstance(fmt, str) or not fmt: raise ValueError("fmt must be a non-empty string")
-    if not isinstance(name, str) or not name: raise ValueError("name must be a non-empty string")
-    if fmt not in self._allowed_formats: raise ValueError(f"Invalid fmt '{fmt}'. Allowed formats: {self._allowed_formats}")
-    self.__fmt = fmt
-    self.__name = name
-  def __repr__(self): return f"<DType(name='{self.__name}', fmt='{self.__fmt}')>"
-  def __del__(self): del self
-  @property
-  def name(self): return self.__name
-  @property
-  def fmt(self): return self.__fmt
+from dataclasses import dataclass
+from typing import Final, Literal
 
+
+Fmts = Literal["b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d", "g", "F", "D", "G", "?"]
+
+@dataclass(frozen=True, eq=False)
+class DType:
+  name:str
+  fmt:Fmts
+  priority:int
+  @staticmethod
+  def new(name:str, fmt:Fmts, priority:int): return DType(name, fmt, priority)
+  def __repr__(self): return f"<DType(name='{self.name}', fmt='{self.fmt}', priority={self.priority})>"
+  def name(self): return self.name
+  def fmt(self): return self.fmt
+  def priority(self): return self.priority
 
 # pre-defined dtypes for backend
-char = int8 = DType("char", "b")
-uchar = uint8 = DType("unsigned char", "B")
-short = int16 = DType("short", "h")
-ushort = uint16 = DType("unsigned short", "H")
-int_ = int32 = DType("int", "i")
-uint_ = uint32 = DType("unsigned int", "I")
-long = int64 = DType("long", "l")
-ulong = uint64 = DType("unsigned long", "L")
-longlong = DType("long long", "q")
-ulonglong = DType("unsigned long long", "Q")
-float_ = float32 = DType("float", "f")
-double = float64 = DType("double", "d")
-longdouble = DType("long double", "g")
-floatcomplex = complex64 = DType("float complex", "F")
-doublecomplex = complex128 = DType("double complex", "D")
-longdoublecomplex = complex256 = DType("long double complex", "G")
-bool_ = DType("bool", "?")
+bool_:Final[DType] = DType.new("bool", "?", 0)
+int8:Final[DType] = DType.new("char", "b", 1)
+uint8:Final[DType] = DType.new("unsigned char", "B", 2)
+int16:Final[DType] = DType.new("short", "h", 3)
+uint16:Final[DType] = DType.new("unsigend short", "H", 4)
+int32:Final[DType] = DType.new("int", "i", 5)
+uint32:Final[DType] = DType.new("unsigned int", "I", 6)
+int64:Final[DType] = DType.new("long", "l", 7)
+uint64:Final[DType] = DType.new("unsigned long", "L", 8)
+longlong:Final[DType] = DType.new("long long", "q", 9)
+ulonglong:Final[DType] = DType.new("unsigned long long", "Q", 10)
+float32:Final[DType] = DType.new("float", "f", 11)
+float64:Final[DType] = DType.new("double", "d", 12)
+longdouble:Final[DType] = DType.new("long double", "g", 13)
+complex64:Final[DType] = DType.new("float complex", "F", 14)
+complex128:Final[DType] = DType.new("double complex", "D", 15)
+complex256:Final[DType] = DType.new("long double complex", "G", 16)
 
 SIGNED_INTEGERS = (int, int8, int16, int32, int64, longlong)
 UNSIGNED_INTEGERS = (uint8, uint16, uint32, uint64, ulonglong)
