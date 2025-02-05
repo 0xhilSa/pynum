@@ -132,15 +132,16 @@ static PyObject* py_list_from_capsule(PyObject* self, PyObject* args){
   return py_list;
 }
 
-static PyObject* py_get_value(PyObject* self, PyObject* args){
+static PyObject* py_get_by_index(PyObject* self, PyObject* args){
   PyObject* capsule;
-  Py_ssize_t index;
+  Py_ssize_t length, index;
   const char* fmt;
-  if(!PyArg_ParseTuple(args, "Ons", &capsule, &index, &fmt)) return NULL;
+  if(!PyArg_ParseTuple(args, "Onns", &capsule, &length, &index, &fmt)) return NULL;
   if(!PyCapsule_CheckExact(capsule)){
     PyErr_SetString(PyExc_TypeError, "Invalid PyCapsule");
     return NULL;
   }
+  if(index < 0) index += length;
   void* array = PyCapsule_GetPointer(capsule, "array_pointer");
   if(!array){
     PyErr_SetString(PyExc_ValueError, "Invalid PyCapsule");
@@ -173,11 +174,172 @@ static PyObject* py_get_value(PyObject* self, PyObject* args){
   }
 }
 
+static PyObject* py_get_by_slice(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length, start, stop, step;
+  const char* fmt;
+  if(!PyArg_ParseTuple(args, "Onnnns", &capsule, &length, &start, &stop, &step, &fmt)) return NULL;
+  if(!PyCapsule_CheckExact(capsule)){
+    PyErr_SetString(PyExc_TypeError, "Invalid PyCapsule");
+    return NULL;
+  }
+  if(start < 0) start += length;
+  if(stop < 0) stop += length;
+  if(start < 0 || stop < start || step == 0){
+    PyErr_SetString(PyExc_ValueError, "Invalid slice indices");
+    return NULL;
+  }
+  void* array = PyCapsule_GetPointer(capsule, "array_pointer");
+  if(!array){
+    PyErr_SetString(PyExc_ValueError, "Invalid PyCapsule");
+    return NULL;
+  }
+  size_t element_size;
+  if(strcmp(fmt, "b") == 0 || strcmp(fmt, "B") == 0) element_size = sizeof(char);
+  else if(strcmp(fmt, "h") == 0 || strcmp(fmt, "H") == 0) element_size = sizeof(short);
+  else if(strcmp(fmt, "i") == 0 || strcmp(fmt, "I") == 0) element_size = sizeof(int);
+  else if(strcmp(fmt, "l") == 0 || strcmp(fmt, "L") == 0) element_size = sizeof(long);
+  else if(strcmp(fmt, "q") == 0 || strcmp(fmt, "Q") == 0) element_size = sizeof(long long);
+  else if(strcmp(fmt, "f") == 0) element_size = sizeof(float);
+  else if(strcmp(fmt, "d") == 0) element_size = sizeof(double);
+  else if(strcmp(fmt, "g") == 0) element_size = sizeof(long double);
+  else if(strcmp(fmt, "F") == 0) element_size = sizeof(float complex);
+  else if(strcmp(fmt, "D") == 0) element_size = sizeof(double complex);
+  else if(strcmp(fmt, "G") == 0) element_size = sizeof(long double complex);
+  else if(strcmp(fmt, "?") == 0) element_size = sizeof(bool);
+  else{
+    PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+    return NULL;
+  }
+  size_t sliced_length = (stop - start) / step;
+  if(sliced_length < 0){
+    PyErr_SetString(PyExc_ValueError, "Ivalid slice length");
+    return NULL;
+  }
+  void* sliced_array = malloc(sliced_length * element_size);
+  if(!sliced_array){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory for sliced array");
+    return NULL;
+  }
+  for(size_t i = 0, j = start; j < stop; j += step, i++){ memcpy((char*)sliced_array + i * element_size, (char*)array + j * element_size, element_size); }
+  return PyCapsule_New(sliced_array, "array_pointer", free_capsule);
+}
+
+static PyObject* py_set_by_index(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length, index;
+  const char* fmt;
+  PyObject* value;
+  if(!PyArg_ParseTuple(args, "OnnsO", &capsule, &length, &index, &fmt, &value)) return NULL;
+  if(!PyCapsule_CheckExact(capsule)){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule");
+    return NULL;
+  }
+  void* array = PyCapsule_GetPointer(capsule, "array_pointer");
+  if(!array){
+    PyErr_SetString(PyExc_ValueError, "Invalid PyCapsule");
+    return NULL;
+  }
+  if(index < 0 || index >= length){
+    PyErr_SetString(PyExc_IndexError, "Index out of range!");
+    return NULL;
+  }
+  if(strcmp(fmt, "?") == 0) ((bool*)array)[index] = PyObject_IsTrue(value);
+  else if(strcmp(fmt, "b") == 0) ((char*)array)[index] = (char)PyLong_AsLong(value);
+  else if(strcmp(fmt, "B") == 0) ((unsigned char*)array)[index] = (char)PyLong_AsUnsignedLong(value);
+  else if(strcmp(fmt, "h") == 0) ((short*)array)[index] = (short)PyLong_AsLong(value);
+  else if(strcmp(fmt, "H") == 0) ((unsigned short*)array)[index] = (unsigned short)PyLong_AsUnsignedLong(value);
+  else if(strcmp(fmt, "i") == 0) ((int*)array)[index] = (int)PyLong_AsLong(value);
+  else if(strcmp(fmt, "I") == 0) ((unsigned int*)array)[index] = (unsigned int)PyLong_AsUnsignedLong(value);
+  else if(strcmp(fmt, "l") == 0) ((long*)array)[index] = (long)PyLong_AsLong(value);
+  else if(strcmp(fmt, "L") == 0) ((unsigned long*)array)[index] = (unsigned long)PyLong_AsUnsignedLong(value);
+  else if(strcmp(fmt, "q") == 0) ((long long*)array)[index] = (long long)PyLong_AsLongLong(value);
+  else if(strcmp(fmt, "Q") == 0) ((unsigned long long*)array)[index] = (unsigned long long)PyLong_AsUnsignedLongLong(value);
+  else if(strcmp(fmt, "f") == 0) ((float*)array)[index] = (float)PyFloat_AsDouble(value);
+  else if(strcmp(fmt, "d") == 0) ((double*)array)[index] = (double)PyFloat_AsDouble(value);
+  else if(strcmp(fmt, "g") == 0) ((long double*)array)[index] = (long double)PyFloat_AsDouble(value);
+  else if(strcmp(fmt, "F") == 0){
+    float real = (float)PyComplex_RealAsDouble(value);
+    float imag = (float)PyComplex_ImagAsDouble(value);
+    ((float complex*)array)[index] = real + imag * I;
+  }else if(strcmp(fmt, "D") == 0){
+    double real = (double)PyComplex_RealAsDouble(value);
+    double imag = (double)PyComplex_ImagAsDouble(value);
+    ((double complex*)array)[index] = real + imag * I;
+  }else if(strcmp(fmt, "G") == 0){
+    long double real = (long double)PyComplex_RealAsDouble(value);
+    long double imag = (long double)PyComplex_ImagAsDouble(value);
+    ((long double*)array)[index] = real + imag * I;
+  }else{
+    PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+    return NULL;
+  }
+  Py_RETURN_NONE;
+}
+
+static PyObject* py_set_by_slice(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length, start, stop, step;
+  const char* fmt;
+  PyObject* values;
+  if(!PyArg_ParseTuple(args, "OnnnnsO", &capsule, &length, &start, &stop, &step, &fmt, &values)) return NULL;
+  if(!PyCapsule_CheckExact(capsule)){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule");
+    return NULL;
+  }
+  void* array = PyCapsule_GetPointer(capsule, "array_pointer");
+  if(!array){
+    PyErr_SetString(PyExc_ValueError, "Invalid PyCapsule");
+    return NULL;
+  }
+  if(!PyList_Check(values)){
+    PyErr_SetString(PyExc_TypeError, "Expected a Python List");
+    return NULL;
+  }
+  Py_ssize_t values_length = PyList_Size(values);
+  Py_ssize_t expected_length = (stop + start) / step;
+  printf("values_length : expected_length :: %ld : %ld\n",values_length, expected_length);
+  if(values_length != expected_length){
+    PyErr_SetString(PyExc_ValueError, "Length of values list does not match the slice size");
+    return NULL;
+  }
+  for(Py_ssize_t i = 0, idx = start; idx < stop; idx += step, i++) {
+    PyObject* item = PyList_GetItem(values, i);
+    if(!item){
+      PyErr_SetString(PyExc_ValueError, "Invalid item in values list");
+      return NULL;
+    }
+    if(strcmp(fmt, "b") == 0) ((char*)array)[idx] = (char)PyLong_AsLong(item);
+    else if(strcmp(fmt, "B") == 0) ((unsigned char*)array)[idx] = (unsigned char)PyLong_AsUnsignedLong(item);
+    else if(strcmp(fmt, "h") == 0) ((short*)array)[idx] = (short)PyLong_AsLong(item);
+    else if(strcmp(fmt, "H") == 0) ((unsigned short*)array)[idx] = (unsigned short)PyLong_AsUnsignedLong(item);
+    else if(strcmp(fmt, "i") == 0) ((int*)array)[idx] = (int)PyLong_AsLong(item);
+    else if(strcmp(fmt, "I") == 0) ((unsigned int*)array)[idx] = (unsigned int)PyLong_AsUnsignedLong(item);
+    else if(strcmp(fmt, "l") == 0) ((long*)array)[idx] = PyLong_AsLong(item);
+    else if(strcmp(fmt, "L") == 0) ((unsigned long*)array)[idx] = (unsigned long)PyLong_AsUnsignedLong(item);
+    else if(strcmp(fmt, "q") == 0) ((long long*)array)[idx] = (long long)PyLong_AsLongLong(item);
+    else if(strcmp(fmt, "Q") == 0) ((unsigned long long*)array)[idx] = (unsigned long long)PyLong_AsUnsignedLongLong(item);
+    else if(strcmp(fmt, "f") == 0) ((float*)array)[idx] = (float)PyFloat_AsDouble(item);
+    else if(strcmp(fmt, "d") == 0) ((double*)array)[idx] = PyFloat_AsDouble(item);
+    else if(strcmp(fmt, "F") == 0) ((float complex*)array)[idx] = (float)PyComplex_RealAsDouble(item) + (float)PyComplex_ImagAsDouble(item) * I;
+    else if(strcmp(fmt, "D") == 0) ((double complex*)array)[idx] = PyComplex_RealAsDouble(item) + PyComplex_ImagAsDouble(item) * I;
+    else if(strcmp(fmt, "G") == 0) ((long double complex*)array)[idx] = (long double)PyComplex_RealAsDouble(item) + (long double)PyComplex_ImagAsDouble(item) * I;
+    else if(strcmp(fmt, "?") == 0) ((bool*)array)[idx] = PyObject_IsTrue(item);
+    else{
+      PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+      return NULL;
+    }
+  }
+  Py_RETURN_NONE;
+}
 
 static PyMethodDef Methods[] = {
   {"array", py_list, METH_VARARGS, "create an array with only one king of dtype"},
   {"toList", py_list_from_capsule, METH_VARARGS, "get python list from the the capsule"},
-  {"get", py_get_value, METH_VARARGS, "get value by index"},
+  {"get_by_index", py_get_by_index, METH_VARARGS, "get the value at a specified index"},
+  {"get_by_slice", py_get_by_slice, METH_VARARGS, "get the values at a specified range"},
+  {"set_by_index", py_set_by_index, METH_VARARGS, "set value by index"},
+  {"set_by_slice", py_set_by_slice, METH_VARARGS, "set value by slice"},
   {NULL, NULL, 0, NULL}
 };
 
