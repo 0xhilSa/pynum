@@ -316,9 +316,7 @@ static PyObject* py_set_by_slice(PyObject* self, PyObject* args) {
   Py_ssize_t length, start, stop, step;
   const char* fmt;
   PyObject* value;
-  
   if(!PyArg_ParseTuple(args, "OnnnnsO", &capsule, &length, &start, &stop, &step, &fmt, &value)) return NULL;
-  
   if(!PyCapsule_CheckExact(capsule)){
     PyErr_SetString(PyExc_TypeError, "Expected PyCapsule");
     return NULL;
