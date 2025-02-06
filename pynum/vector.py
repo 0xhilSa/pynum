@@ -19,7 +19,7 @@ class Vector:
     if dtype == int: dtype = int64
     elif dtype == float: dtype = float64
     elif dtype == complex: dtype = complex128
-    elif dtype == bool: dtype = bool_
+    elif dtype == bool: dtype = boolean
     length = len(array)
     if device.lower() == "cpu": array = host.array(array, dtype.fmt)
     elif device.lower() == "cuda": array = pycu.toCuda(host.array(array, dtype.fmt), length, dtype.fmt)
@@ -40,7 +40,16 @@ class Vector:
     if dtype == int: dtype = int64
     elif dtype == float: dtype = float64
     elif dtype == complex: dtype = complex128
-    elif dtype == bool: dtype = bool_
+    elif dtype == bool: dtype = boolean
+    raise NotImplementedError
+  def cuda(self):
+    if self.__device == "cpu": return Vector(host.toList(self.__pointer, self.__length, self.__dtype.fmt), dtype=self.__dtype, device="cuda")
+  def cpu(self):
+    if self.__device == "cuda": return Vector(host.toList(pycu.toHost(self.__pointer, self.__length, self.__dtype.fmt), self.__length, self.__dtype.fmt), dtype=self.__dtype, device="cpu")
+  def to(self, device:str):
+    if device == "cuda": return self.cuda()
+    elif device == "cpu": return self.cpu()
+    else: raise DeviceError(f"Invalid Device: '{device}'!")
   def __getitem__(self, index:Union[int,slice]):
     if isinstance(index, int):
       if self.__device == "cpu": return Vector([host.get_by_index(self.__pointer, self.__length, index, self.fmt)], dtype=self.__dtype)
