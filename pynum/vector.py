@@ -9,6 +9,14 @@ from .dtype import *
 
 
 class Vector:
+  @staticmethod
+  def __from_builtin2custom(dtype:Type):
+    if isinstance(dtype, DType): return dtype
+    elif dtype == int: return int64
+    elif dtype == float: return float64
+    elif dtype == complex: return complex256
+    elif dtype == bool: return boolean
+    else: TypeError(f"Invalid DType: {dtype}")
   def __init__(self, array, dtype:Union[Type,DType], device:str="cpu", const:bool=False):
     self.__pointer, self.__length, self.__dtype, self.__device = Vector.__check__(array, dtype, device)
     self.__const = const
@@ -16,10 +24,7 @@ class Vector:
   @staticmethod
   def __check__(array:List, dtype:DType, device:str):
     # if user provide builtin dtypes
-    if dtype == int: dtype = int64
-    elif dtype == float: dtype = float64
-    elif dtype == complex: dtype = complex128
-    elif dtype == bool: dtype = boolean
+    dtype = Vector.__from_builtin2custom(dtype)
     length = len(array)
     if device.lower() == "cpu": array = host.array(array, dtype.fmt)
     elif device.lower() == "cuda": array = pycu.toCuda(host.array(array, dtype.fmt), length, dtype.fmt)
@@ -37,11 +42,9 @@ class Vector:
     return host.toList(self.__pointer, self.__length, self.__dtype.fmt)
   def numpy(self): return np.array(self.list())
   def astype(self, dtype:Union[Type,DType]):
-    if dtype == int: dtype = int64
-    elif dtype == float: dtype = float64
-    elif dtype == complex: dtype = complex128
-    elif dtype == bool: dtype = boolean
-    raise NotImplementedError
+    dtype = Vector.__from_builtin2custom(dtype)
+    if self.__device == "cpu": return Vector(host.toList(self.__pointer, self.__length, self.__dtype), dtype=dtype)
+    elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(self.__pointer, self.__length, self.__dtype.fmt), self.__length, self.__dtype.fmt), dtype=dtype, device="cuda")
   def cuda(self):
     if self.__device == "cpu": return Vector(host.toList(self.__pointer, self.__length, self.__dtype.fmt), dtype=self.__dtype, device="cuda")
   def cpu(self):
