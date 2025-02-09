@@ -16,14 +16,13 @@
 
 
 __global__ void strided_copy_kernel(void* dst, void* src, size_t start, size_t step, size_t length, size_t element_size){
-  size_t idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if(idx < length){
+  size_t index = threadIdx.x + blockIdx.x * blockDim.x;
+  if(index < length){
     char* src_base = (char*)src;
     char* dst_base = (char*)dst;
-    memcpy(dst_base + idx * element_size, src_base + (start + idx * step) * element_size, element_size);
+    memcpy(dst_base + index * element_size, src_base + (start + index * step) * element_size, element_size);
   }
 }
-
 
 void free_capsule(PyObject* capsule) {
   void* ptr = PyCapsule_GetPointer(capsule, "array_pointer");
@@ -311,7 +310,7 @@ static PyObject* py_set_by_index(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
-static PyObject* py_set_by_slice(PyObject* self, PyObject* args) {
+static PyObject* py_set_by_slice(PyObject* self, PyObject* args){
   PyObject* capsule;
   Py_ssize_t length, start, stop, step;
   const char* fmt;
