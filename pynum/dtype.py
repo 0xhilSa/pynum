@@ -40,4 +40,4 @@ UNSIGNED_INTEGERS = (uint8, uint16, uint32, uint64, ulonglong)
 FLOATING = (float, float32, float64, longdouble)
 COMPLEX = (complex, complex64, complex128, complex256)
 BOOL = (bool, boolean)
-VALID_DTYPE = SIGNED_INTEGERS + UNSIGNED_INTEGERS + FLOATING + COMPLEX + BOOL
+VALID_DTYPES = SIGNED_INTEGERS + UNSIGNED_INTEGERS + FLOATING + COMPLEX + BOOL
