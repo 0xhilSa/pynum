@@ -2,7 +2,28 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 
-Fmts = Literal["b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d", "g", "F", "D", "G", "?"]
+Fmts = Literal["?", "b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d", "g", "F", "D", "G"]
+__fmts = ["?", "b", "B", "h", "H", "i", "I", "l", "L", "q", "Q", "f", "d", "g", "F", "D", "G"]
+__dtype_names = [
+  "boolean",
+  "char",
+  "unsigned char",
+  "short",
+  "unsigned short",
+  "int",
+  "unsigned int",
+  "long",
+  "unsigned long",
+  "long long",
+  "unsigned long long",
+  "float",
+  "double",
+  "long double",
+  "float complex",
+  "double complex",
+  "long double complex"
+]
+__dtypes_dict = {name: i for i, name in enumerate(__dtype_names)}
 
 @dataclass(frozen=True, eq=False)
 class DType:
@@ -15,6 +36,23 @@ class DType:
   def name(self): return self.name
   def fmt(self): return self.fmt
   def priority(self): return self.priority
+
+def get_by_fmt(fmt: str) -> DType:
+  try:
+    index = __fmts.index(fmt)
+    name = __dtype_names[index]
+    return DType(name, fmt, index)
+  except ValueError: raise ValueError(f"Invalid format specifier: {fmt}")
+
+def get_by_name(name: str) -> DType:
+  try:
+    index = __dtypes_dict[name]
+    return DType(name, __fmts[index], index)
+  except KeyError: raise ValueError(f"Invalid dtype name: {name}")
+
+def get_by_priority(priority: int) -> DType:
+  if 0 <= priority < len(__dtype_names): return DType(__dtype_names[priority], __fmts[priority], priority)
+  raise ValueError(f"Invalid priority: {priority}")
 
 # pre-defined dtypes for backend
 boolean:Final[DType] = DType.new("boolean", "?", 0)
