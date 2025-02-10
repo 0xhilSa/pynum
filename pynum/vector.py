@@ -11,7 +11,7 @@ from .dtype import *
 class Vector:
   @staticmethod
   def __from_builtin2custom(dtype:Type):
-    if isinstance(dtype, DType): return dtype
+    if dtype in VALID_DTYPES: return dtype
     elif dtype == int: return int64
     elif dtype == float: return float64
     elif dtype == complex: return complex256
@@ -63,6 +63,7 @@ class Vector:
       length = int((stop - start) / step)
       if self.__device == "cpu": return Vector(host.toList(host.get_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt), length, self.__dtype.fmt), dtype=self.__dtype)
       elif self.__device == "cuda": return Vector(host.toList(pycu.toHost(pycu.get_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt), length, self.__dtype.fmt), length, self.__dtype.fmt), dtype=self.__dtype, device=self.__device)
+    else: raise IndexError(f"Index out of bound!")
   def __setitem__(self, index:Union[int,slice], value):
     if isinstance(index, int):
       if self.__device == "cpu": host.set_by_index(self.__pointer, self.__length, index, self.__dtype.fmt, value)
@@ -72,3 +73,4 @@ class Vector:
       if step is None: step = 1
       if self.__device == "cpu": host.set_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt, value)
       elif self.__device == "cuda": pycu.set_by_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.fmt, value)
+    else: raise IndexError(f"Index out of bound!")
