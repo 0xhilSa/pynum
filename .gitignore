@@ -1,4 +1,5 @@
 .vscode
+.ccls-cache/
 __pycache__
 build
 pynum.egg-info
