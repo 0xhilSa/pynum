@@ -38,8 +38,8 @@ complex128:Final[DType] = DType.new("double complex", "D", 15)
 complex256:Final[DType] = DType.new("long double complex", "G", 16)
 
 INTEGER = (int8, int16, int32, int64, longlong)
-FLOATINIG = (float32, float64, float128)
+FLOATIING = (float32, float64, float128)
 COMPLEX = (complex64, complex128, complex256)
 BOOLEAN = (boolean,)
-BUILTIN = (int, float, complex)
-VALID_DTYPES = INTEGER + FLOATINIG + COMPLEX + BOOLEAN + BUILTIN
+BUILTIN = (int, float, complex, bool)
+VALID_DTYPES = INTEGER + FLOATIING + COMPLEX + BOOLEAN + BUILTIN
