@@ -6,6 +6,10 @@
 ## Accelerators
 - CUDA
 
+## Prerequisites
+  - GCC Compiler
+  - NVCC Compiler ([NVIDIA Toolkit](https://developer.nvidia.com/cuda-downloads))
+
 ## Installation
   ```bash
   git clone "git@github.com:0xhilSa/pynum.git"
