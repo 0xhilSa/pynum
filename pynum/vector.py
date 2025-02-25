@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import Any, List, Type, Union
+import numpy as np
 from .dtype import *
-from .csrc import host
+from .csrc import host, pycu
 
 
 
@@ -24,8 +25,29 @@ class Vector:
     elif not isinstance(dtype, DType): raise TypeError(f"Invalid dtype {dtype}. Must be int, float, complex, bool, or a custom DType")
     fmt = dtype.get_fmt()
     length = len(array)
-    if device.lower() == "cpu": array = host.array(array, fmt)
-    elif device.lower() == "cuda": raise NotImplementedError
+    array = host.array(array, fmt)
+    if device.lower() == "cuda": array = pycu.toCuda(array, length, fmt)
     return array, length, dtype, device.lower()
   def __repr__(self): return f"<Vector(length={self.__length}, dtype='{self.__dtype.get_name()}', device='{self.__device}')>"
-
+  @property
+  def device(self): return self.__device
+  @property
+  def dtype(self): return self.__dtype
+  @property
+  def fmt(self): return self.__dtype.get_fmt()
+  def pointer(self): return self.__pointer    # for testing
+  def is_const(self): return self.__const
+  def list_(self):
+    if self.__device == "cuda": return host.toList((pycu.toHost(self.__pointer, self.__length, self.__dtype.get_fmt())), self.__length, self.__dtype.get_fmt())
+    return host.toList(self.__pointer, self.__length, self.__dtype.get_fmt())
+  def numpy(self):
+    if self.__device == "cuda":
+      x = pycu.toHost(self.__pointer, self.__length, self.__dtype.fmt)
+      return np.array(host.toList(x, self.__length, self.__dtype.fmt))
+    return np.array(self.list_())
+  def cuda(self):
+    if self.__device == "cpu": return Vector(self.list_(), self.__dtype, device="cuda")
+    return self
+  def cpu(self):
+    if self.__device == "cuda": return Vector(self.list_(), self.__dtype, device="cpu")
+    return self
