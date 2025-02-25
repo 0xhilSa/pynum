@@ -14,16 +14,16 @@ HOST_OUT="./pynum/csrc/host.so"
 CUDA_OUT="./pynum/csrc/pycu.so"
 
 # spinner function
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spin='|/-\'
-    local i=0
+spinner(){
+  local pid=$1
+  local delay=0.1
+  local spin='|/-\'
+  local i=0
 
-    while kill -0 $pid 2>/dev/null; do
-        printf "\rCompiling C and CUDA source file %s" "${spin:i++%4:1}"
-        sleep $delay
-    done
+  while kill -0 $pid 2>/dev/null; do
+    printf "\rCompiling C and CUDA source file %s" "${spin:i++%4:1}"
+    sleep $delay
+  done
 }
 
 # compile host.c
