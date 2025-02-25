@@ -8,7 +8,7 @@
 
 ## Prerequisites
   - GCC Compiler
-  - NVCC Compiler ([NVIDIA Toolkit](https://developer.nvidia.com/cuda-downloads))
+  - NVCC Compiler ([NVIDIA Toolkit](https://developer.nvidia.com/cuda-downloads){:target="_blank"})
 
 ## Installation
   ```bash
