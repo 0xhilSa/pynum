@@ -13,3 +13,5 @@
   bash install.sh
   ```
 
+# LICENSE
+[MIT](./LICENSE)
