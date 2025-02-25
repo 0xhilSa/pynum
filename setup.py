@@ -4,6 +4,7 @@ setup(
   name="pynum",
   version="0.1.0",
   author="Sahil Rajwar",
+  license="MIT",
   description="a small python library for 1D and 2D arrays with GPU support",
   long_description=open("README.md").read(),
   long_description_content_type="text/markdown",
