@@ -1,4 +1,4 @@
-.vscode
+.vscode/
 .ccls-cache/
 .vim/
 __pycache__/
