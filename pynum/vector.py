@@ -51,3 +51,17 @@ class Vector:
   def cpu(self):
     if self.__device == "cuda": return Vector(self.list_(), self.__dtype, device="cpu")
     return self
+  def __getitem__(self, index:Union[int,slice]):
+    if isinstance(index,int):
+      if self.__device == "cuda": raise NotImplementedError
+      res = host.toList(host.getitem_index(self.__pointer, self.__length, index, self.__dtype.get_fmt()), 1, self.__dtype.get_fmt())
+      return Vector(res, dtype=self.__dtype)
+    elif isinstance(index, slice):
+      start, stop, step = index.start, index.stop, index.step
+      if start is None: start = 0
+      if stop is None: stop = self.__length
+      if step is None: step = 1
+      sliced_len = max(0, (stop - start + step - (1 if step > 0 else -1)) // step)
+      if self.__device == "cuda": raise NotImplementedError
+      res = host.toList(host.getitem_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.get_fmt()), sliced_len, self.__dtype.get_fmt())
+      return Vector(res, self.__dtype)

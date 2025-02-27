@@ -13,6 +13,16 @@ CUDA_SRC="./pynum/csrc/pycu.cu"
 HOST_OUT="./pynum/csrc/host.so"
 CUDA_OUT="./pynum/csrc/pycu.so"
 
+AUTO_YES=false
+
+# Parse command-line arguments
+while getopts "y" opt; do
+  case ${opt} in
+    y ) AUTO_YES=true ;;
+    * ) echo "Usage: $0 [-y]"; exit 1 ;;
+  esac
+done
+
 # spinner function
 spinner(){
   local pid=$1
@@ -46,20 +56,26 @@ echo -ne "\r\033[KCompiled Successfully!\n"
 
 # check if pynum is already installed
 if python3 -c "import pynum" 2>/dev/null; then
-  read -p "pynum is already installed. Do you want to reinstall it? (y/N): " choice
-  case "$choice" in
-    y|Y)
-      echo "Reinstalling pynum..."
-      pip uninstall -y pynum
-      ;;
-    *)
-      echo "Aborting installation."
-      exit 1
-      ;;
-  esac
+  if [ "$AUTO_YES" = true ]; then
+    echo "Reinstalling pynum..."
+    pip uninstall -y pynum
+  else
+    read -p "pynum is already installed. Do you want to reinstall it? (y/N): " choice
+    case "$choice" in
+      y|Y)
+        echo "Reinstalling pynum..."
+        pip uninstall -y pynum
+        ;;
+      *)
+        echo "Aborting installation."
+        exit 1
+        ;;
+    esac
+  fi
 fi
 
 # install pynum from source
 python3 -m build
 cd dist/ && pip install *.whl && cd ..
 rm -rf dist/ build/ pynum.egg-info/
+

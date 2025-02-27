@@ -2,9 +2,6 @@
 #include <python3.10/Python.h>
 #include <cuda_runtime.h>
 #include <cuComplex.h>
-#include <python3.10/methodobject.h>
-#include <python3.10/pycapsule.h>
-#include <python3.10/pyerrors.h>
 
 #define CUDA_ERROR(call)                                        \
   do{                                                           \
@@ -93,6 +90,8 @@ static PyObject* toHost(PyObject* self, PyObject* args){
   CUDA_ERROR(cudaMemcpy(host_ptr, device_ptr, length * type_size, cudaMemcpyDeviceToHost));
   return PyCapsule_New(host_ptr, "host_memory", free_memory);
 }
+
+//static PyObject* getitem(PyObject* )
 
 static PyMethodDef methods[] = {
   {"toCuda", toCuda, METH_VARARGS, "Move host memory to CUDA device memory"},

@@ -159,9 +159,109 @@ static PyObject* array(PyObject* self, PyObject* args){
   return capsule;
 }
 
+static PyObject* getitem_index(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length, index;
+  const char* fmt;
+  if(!PyArg_ParseTuple(args, "Onns", &capsule, &length, &index, &fmt)) return NULL;
+
+  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+  if(!buffer){
+    PyErr_SetString(PyExc_ValueError, "Invalid memory capsule");
+    return NULL;
+  }
+
+  if(index < 0) index += length;
+  if(index < 0 || index >= length){
+    PyErr_SetString(PyExc_IndexError, "Index out of bounds!");
+    return NULL;
+  }
+
+  void* value = NULL;
+  size_t type_size = 0;
+
+  switch(*fmt){
+    case '?': type_size = sizeof(bool); break;
+    case 'b': type_size = sizeof(char); break;
+    case 'B': type_size = sizeof(unsigned char); break;
+    case 'h': type_size = sizeof(short); break;
+    case 'H': type_size = sizeof(unsigned short); break;
+    case 'i': type_size = sizeof(int); break;
+    case 'I': type_size = sizeof(unsigned int); break;
+    case 'l': type_size = sizeof(long); break;
+    case 'L': type_size = sizeof(unsigned long); break;
+    case 'q': type_size = sizeof(long long); break;
+    case 'Q': type_size = sizeof(unsigned long long); break;
+    case 'f': type_size = sizeof(float); break;
+    case 'd': type_size = sizeof(double); break;
+    case 'g': type_size = sizeof(long double); break;
+    default:
+      PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+      return NULL;
+  }
+
+  value = malloc(type_size);
+  if (!value) {
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory");
+    return NULL;
+  }
+  memcpy(value, (char*)buffer + index * type_size, type_size);
+
+  PyObject* value_capsule = PyCapsule_New(value, "host_memory", free_memory);
+  if(!value_capsule){
+    free(value);
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create PyCapsule");
+    return NULL;
+  }
+  return value_capsule;
+}
+
+static PyObject* getitem_slice(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length, start, stop, step;
+  const char* fmt;
+
+  if(!PyArg_ParseTuple(args, "Onnnns", &capsule, &length, &start, &stop, &step, &fmt)) return NULL;
+
+  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+  if(!buffer){
+    PyErr_SetString(PyExc_ValueError, "Invalid memory capsule");
+    return NULL;
+  }
+
+  Py_ssize_t sliced_len = (stop - start + step - (step > 0 ? 1 : -1)) / step;
+  if(sliced_len <= 0) sliced_len = 0;
+
+  size_t item_size = get_type_size(fmt);
+  if(item_size == 0){
+    PyErr_SetString(PyExc_TypeError, "Unsupported data type");
+    return NULL;
+  }
+
+  void* sliced_buffer = malloc(sliced_len * item_size);
+  if(!sliced_buffer){
+    PyErr_SetString(PyExc_MemoryError, "Failed to allocate slice buffer");
+    return NULL;
+  }
+
+  for(Py_ssize_t i = 0, j = start * item_size; i < sliced_len; i++, j += step * item_size){
+    memcpy(sliced_buffer + i * item_size, buffer + j, item_size);
+  }
+
+  PyObject* result_capsule = PyCapsule_New(sliced_buffer, "host_memory", free_memory);
+  if(!result_capsule){
+    free(sliced_buffer);
+    PyErr_SetString(PyExc_RuntimeError, "Failed to create PyCapsule");
+    return NULL;
+  }
+  return result_capsule;
+}
+
 static PyMethodDef methods[] = {
   {"array", array, METH_VARARGS, "allocate the memory for a list and return a capsule"},
   {"toList", toList, METH_VARARGS, "from pycapsule to python list"},
+  {"getitem_index", getitem_index, METH_VARARGS, "get item through index"},
+  {"getitem_slice", getitem_slice, METH_VARARGS, "get item through slice"},
   {NULL, NULL, 0, NULL}
 };
 
