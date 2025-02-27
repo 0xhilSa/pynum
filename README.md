@@ -14,7 +14,7 @@
   ```bash
   git clone "git@github.com:0xhilSa/pynum.git"
   cd pynum && rm -rf .git*
-  bash install.sh
+  bash install.sh -y
   ```
 
 ## LICENSE
