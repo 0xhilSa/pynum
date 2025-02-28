@@ -9,6 +9,7 @@ from .csrc import host, pycu
 class Vector:
   @staticmethod
   def __from_builtin2custom(dtype:Type):
+    if dtype not in BUILTIN: raise TypeError(f"Invalid DType: '{dtype}'")
     if dtype == int: return int64
     elif dtype == float: return float64
     elif dtype == complex: return complex256
