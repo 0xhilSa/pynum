@@ -53,15 +53,19 @@ class Vector:
     return self
   def __getitem__(self, index:Union[int,slice]):
     if isinstance(index,int):
-      if self.__device == "cuda": raise NotImplementedError
-      res = host.toList(host.getitem_index(self.__pointer, self.__length, index, self.__dtype.get_fmt()), 1, self.__dtype.get_fmt())
-      return Vector(res, dtype=self.__dtype)
+      if self.__device == "cuda": res = pycu.toHost(pycu.getitem_index(self.__pointer, index, self.__dtype.get_fmt()), 1, self.__dtype.get_fmt())
+      elif self.__device == "cpu": res = host.getitem_index(self.__pointer, self.__length, index, self.__dtype.get_fmt())
+      else: raise NotImplementedError
+      res = host.toList(res, 1, self.__dtype.get_fmt())
+      return Vector(res, dtype=self.__dtype, device=self.__device)
     elif isinstance(index, slice):
       start, stop, step = index.start, index.stop, index.step
       if start is None: start = 0
       if stop is None: stop = self.__length
       if step is None: step = 1
       sliced_len = max(0, (stop - start + step - (1 if step > 0 else -1)) // step)
-      if self.__device == "cuda": raise NotImplementedError
-      res = host.toList(host.getitem_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.get_fmt()), sliced_len, self.__dtype.get_fmt())
-      return Vector(res, self.__dtype)
+      if self.__device == "cuda": res = pycu.toHost(pycu.getitem_slice(self.__pointer, start, stop, step, self.__dtype.get_fmt()), sliced_len, self.__dtype.get_fmt())
+      elif self.__device == "cpu": res = host.getitem_slice(self.__pointer, self.__length, start, stop, step, self.__dtype.get_fmt())
+      else: raise NotImplementedError
+      res = host.toList(res, sliced_len, self.__dtype.get_fmt())
+      return Vector(res, self.__dtype, self.__device)
