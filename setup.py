@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
   name="pynum",
-  version="0.1.0",
+  version="0.0.1",
   author="Sahil Rajwar",
   license="MIT",
   description="a small python library for 1D and 2D arrays with GPU support",
