@@ -1,4 +1,10 @@
 #include <python3.10/Python.h>
+#include <python3.10/modsupport.h>
+#include <python3.10/object.h>
+#include <python3.10/pycapsule.h>
+#include <python3.10/pyerrors.h>
+#include <python3.10/pyport.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <complex.h>
@@ -257,11 +263,66 @@ static PyObject* getitem_slice(PyObject* self, PyObject* args){
   return result_capsule;
 }
 
+static PyObject* setitem_index(PyObject* self, PyObject* args){
+  PyObject *capsule, *value;
+  Py_ssize_t length, index;
+  const char* fmt;
+  if(!PyArg_ParseTuple(args, "OOnns", &capsule, &value, &length, &index, &fmt)) return NULL;
+
+  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+  if(!buffer){
+    PyErr_SetString(PyExc_ValueError, "Invalid memory capsule");
+    return NULL;
+  }
+
+  if(index < 0) index += length;
+  if(index < 0 || index >= length){
+    PyErr_SetString(PyExc_IndexError, "Index out of bounds!");
+    return NULL;
+  }
+
+  switch (*fmt) {
+    case '?': ((bool*)buffer)[index] = PyObject_IsTrue(value); break;
+    case 'b': ((char*)buffer)[index] = (char)PyLong_AsLong(value); break;
+    case 'B': ((unsigned char*)buffer)[index] = (unsigned char)PyLong_AsUnsignedLong(value); break;
+    case 'h': ((short*)buffer)[index] = (short)PyLong_AsLong(value); break;
+    case 'H': ((unsigned short*)buffer)[index] = (unsigned short)PyLong_AsUnsignedLong(value); break;
+    case 'i': ((int*)buffer)[index] = (int)PyLong_AsLong(value); break;
+    case 'I': ((unsigned int*)buffer)[index] = (unsigned int)PyLong_AsUnsignedLong(value); break;
+    case 'l': ((long*)buffer)[index] = (long)PyLong_AsLong(value); break;
+    case 'L': ((unsigned long*)buffer)[index] = (unsigned long)PyLong_AsUnsignedLong(value); break;
+    case 'q': ((long long*)buffer)[index] = (long long)PyLong_AsLongLong(value); break;
+    case 'Q': ((unsigned long long*)buffer)[index] = (unsigned long long)PyLong_AsUnsignedLongLong(value); break;
+    case 'f': ((float*)buffer)[index] = (float)PyFloat_AsDouble(value); break;
+    case 'd': ((double*)buffer)[index] = PyFloat_AsDouble(value); break;
+    case 'g': ((long double*)buffer)[index] = (long double)PyFloat_AsDouble(value); break;
+    case 'F': {
+                Py_complex cmpx = PyComplex_AsCComplex(value);
+                ((float complex*)buffer)[index] = (float)cmpx.real + (float)cmpx.imag * I;
+              } break;
+    case 'D': {
+                Py_complex cmpx = PyComplex_AsCComplex(value);
+                ((double complex*)buffer)[index] = (double)cmpx.real + (double)cmpx.imag * I;
+              } break;
+    case 'G': {
+                Py_complex cmpx = PyComplex_AsCComplex(value);
+                ((long double complex*)buffer)[index] = (long double)cmpx.real + (long double)cmpx.imag * I;
+              } break;
+    default:
+      PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+      return NULL;
+  }
+
+  if(PyErr_Occurred()) return NULL;
+  Py_RETURN_NONE;
+}
+
 static PyMethodDef methods[] = {
   {"array", array, METH_VARARGS, "allocate the memory for a list and return a capsule"},
   {"toList", toList, METH_VARARGS, "from pycapsule to python list"},
   {"getitem_index", getitem_index, METH_VARARGS, "get item through index"},
   {"getitem_slice", getitem_slice, METH_VARARGS, "get item through slice"},
+  {"setitem_index", setitem_index, METH_VARARGS, "set item through index"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -276,4 +337,3 @@ static struct PyModuleDef module = {
 PyMODINIT_FUNC PyInit_host(void){
   return PyModule_Create(&module);
 }
-
