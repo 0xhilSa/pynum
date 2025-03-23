@@ -5,15 +5,22 @@ from .dtype import *
 from .csrc import host, pycu
 
 
-
 class Vector:
   @staticmethod
-  def __from_builtin2custom(dtype:Type):
+  def __from_builtin2custom(dtype:Type) -> DType:
     if dtype not in BUILTIN: raise TypeError(f"Invalid DType: '{dtype}'")
-    if dtype == int: return int64
-    elif dtype == float: return float64
-    elif dtype == complex: return complex256
-    return boolean
+    if dtype == int: return int32
+    elif dtype == float: return float32
+    elif dtype == complex: return complex128
+    elif dtype == bool: return boolean
+    raise TypeError(f"'{dtype}' is incompatible")
+  @staticmethod
+  def __from_custom2builtin(dtype:DType) -> Type:
+    if dtype in INTEGER: return int
+    elif dtype in FLOATING: return float
+    elif dtype in COMPLEX: return complex
+    elif dtype in BOOLEAN: return bool
+    raise TypeError(f"'{dtype}' is incompatible")
   def __init__(self, array:List[Any], dtype:Union[Type,DType], device:str="cpu", const:bool=False):
     self.__pointer, self.__length, self.__dtype, self.__device = Vector.__check__(array, dtype, device)
     self.__const = const
@@ -30,6 +37,7 @@ class Vector:
     if device.lower() == "cuda": array = pycu.toCuda(array, length, fmt)
     return array, length, dtype, device.lower()
   def __repr__(self): return f"<Vector(length={self.__length}, dtype='{self.__dtype.get_name()}', device='{self.__device}')>"
+  def __len__(self): return self.__length
   @property
   def device(self): return self.__device
   @property
@@ -70,3 +78,23 @@ class Vector:
       else: raise NotImplementedError
       res = host.toList(res, sliced_len, self.__dtype.get_fmt())
       return Vector(res, self.__dtype, self.__device)
+  def __setitem__(self, index:Union[int,slice], value:Union[List[Any],Any]):
+    if isinstance(index, int):
+      value = Vector.__from_custom2builtin(self.__dtype)(value)
+      print(value, type(value))
+      if self.__device == "cpu": host.setitem_index(self.__pointer, value, self.__length, index, self.__dtype.get_fmt())
+      elif self.__device == "cuda": raise NotImplementedError
+    elif isinstance(index, slice): raise NotImplementedError
+
+
+
+
+
+
+
+
+
+
+
+
+
