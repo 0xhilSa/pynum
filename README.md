@@ -17,5 +17,13 @@
   bash install.sh -y
   ```
 
+## ToDo
+- [ ] Complete the `__setitem__` method
+- [ ] Work on the `astype` method
+- [ ] Implement arithmetic and logical operations for `Vector` class
+
+## Future Enhancements
+- Implement an LLVM-based accelerator for CPU execution
+
 ## LICENSE
 [MIT](./LICENSE)
