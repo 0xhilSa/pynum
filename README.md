@@ -18,10 +18,10 @@
   ```
 
 ## ✅ ToDo
-- [ ]Implement the `__setitem__` method
-- [ ]Develop the `astype` method
-- [ ]Add arithmetic and logical operations for the `Vector` class
-- [ ]Ensure compatibility with Windows OS
+- [ ] Implement the `__setitem__` method
+- [ ] Develop the `astype` method
+- [ ] Add arithmetic and logical operations for the `Vector` class
+- [ ] Ensure compatibility with Windows OS
 
 ## 🔥 Future Enhancements
 - Introduction to Matrix dtype
