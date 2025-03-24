@@ -23,6 +23,7 @@
 - [ ] Implement arithmetic and logical operations for `Vector` class
 
 ## Future Enhancements
+- Introduction to Matrix dtype
 - Implement an LLVM-based accelerator for CPU execution
 
 ## LICENSE
