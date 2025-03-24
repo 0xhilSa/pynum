@@ -36,7 +36,7 @@ class Vector:
     array = host.array(array, fmt)
     if device.lower() == "cuda": array = pycu.toCuda(array, length, fmt)
     return array, length, dtype, device.lower()
-  def __repr__(self): return f"<Vector(length={self.__length}, dtype='{self.__dtype.get_name()}', device='{self.__device}')>"
+  def __repr__(self): return f"<Vector(length={self.__length}, dtype='{self.__dtype.get_name()}', device='{self.__device}', const={self.__const})>"
   def __len__(self): return self.__length
   @property
   def device(self): return self.__device
@@ -60,6 +60,7 @@ class Vector:
   def cpu(self):
     if self.__device == "cuda": return Vector(self.list_(), self.__dtype, device="cpu")
     return self
+  def astype(self, dtype:DType): return host.astype(self.__pointer, self.__length, self.__dtype.get_fmt())
   def __getitem__(self, index:Union[int,slice]):
     if isinstance(index,int):
       if self.__device == "cuda": res = pycu.toHost(pycu.getitem_index(self.__pointer, index, self.__dtype.get_fmt()), 1, self.__dtype.get_fmt())
@@ -81,14 +82,9 @@ class Vector:
   def __setitem__(self, index:Union[int,slice], value:Union[List[Any],Any]):
     if isinstance(index, int):
       value = Vector.__from_custom2builtin(self.__dtype)(value)
-      print(value, type(value))
       if self.__device == "cpu": host.setitem_index(self.__pointer, value, self.__length, index, self.__dtype.get_fmt())
-      elif self.__device == "cuda": raise NotImplementedError
+      elif self.__device == "cuda": pycu.setitem_index(self.__pointer, value, self.__length, index, self.__dtype.get_fmt())
     elif isinstance(index, slice): raise NotImplementedError
-
-
-
-
 
 
 
