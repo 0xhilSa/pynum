@@ -1,4 +1,5 @@
 #include <python3.10/Python.h>
+#include <python3.10/methodobject.h>
 #include <python3.10/modsupport.h>
 #include <python3.10/object.h>
 #include <python3.10/pycapsule.h>
@@ -8,6 +9,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <complex.h>
+#include <string.h>
 
 
 static void free_memory(PyObject* capsule){
@@ -163,6 +165,20 @@ static PyObject* array(PyObject* self, PyObject* args){
     return NULL;
   }
   return capsule;
+}
+
+static PyObject* c_astype(PyObject* self, PyObject* args){
+  PyObject* capsule;
+  Py_ssize_t length;
+  const char *src_fmt, dst_fmt;
+  if(!PyArg_ParseTuple(args, "Onss", &capsule, &length, &src_fmt, &dst_fmt)) return NULL;
+
+  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+  if(!buffer){
+    PyErr_SetString(PyExc_ValueError,"Invalid memory capsule");
+    return NULL;
+  }
+
 }
 
 static PyObject* getitem_index(PyObject* self, PyObject* args){
@@ -323,6 +339,7 @@ static PyMethodDef methods[] = {
   {"getitem_index", getitem_index, METH_VARARGS, "get item through index"},
   {"getitem_slice", getitem_slice, METH_VARARGS, "get item through slice"},
   {"setitem_index", setitem_index, METH_VARARGS, "set item through index"},
+  {"astype", c_astype, METH_VARARGS, "type conversion"},
   {NULL, NULL, 0, NULL}
 };
 
