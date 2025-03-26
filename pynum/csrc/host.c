@@ -167,19 +167,19 @@ static PyObject* array(PyObject* self, PyObject* args){
   return capsule;
 }
 
-static PyObject* c_astype(PyObject* self, PyObject* args){
-  PyObject* capsule;
-  Py_ssize_t length;
-  const char *src_fmt, dst_fmt;
-  if(!PyArg_ParseTuple(args, "Onss", &capsule, &length, &src_fmt, &dst_fmt)) return NULL;
-
-  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
-  if(!buffer){
-    PyErr_SetString(PyExc_ValueError,"Invalid memory capsule");
-    return NULL;
-  }
-
-}
+//static PyObject* c_astype(PyObject* self, PyObject* args){
+//  PyObject* capsule;
+//  Py_ssize_t length;
+//  const char *src_fmt, dst_fmt;
+//  if(!PyArg_ParseTuple(args, "Onss", &capsule, &length, &src_fmt, &dst_fmt)) return NULL;
+//
+//  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+//  if(!buffer){
+//    PyErr_SetString(PyExc_ValueError,"Invalid memory capsule");
+//    return NULL;
+//  }
+//
+//}
 
 static PyObject* getitem_index(PyObject* self, PyObject* args){
   PyObject* capsule;
@@ -283,6 +283,7 @@ static PyObject* setitem_index(PyObject* self, PyObject* args){
   PyObject *capsule, *value;
   Py_ssize_t length, index;
   const char* fmt;
+
   if(!PyArg_ParseTuple(args, "OOnns", &capsule, &value, &length, &index, &fmt)) return NULL;
 
   void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
@@ -297,7 +298,7 @@ static PyObject* setitem_index(PyObject* self, PyObject* args){
     return NULL;
   }
 
-  switch (*fmt) {
+  switch (*fmt){
     case '?': ((bool*)buffer)[index] = PyObject_IsTrue(value); break;
     case 'b': ((char*)buffer)[index] = (char)PyLong_AsLong(value); break;
     case 'B': ((unsigned char*)buffer)[index] = (unsigned char)PyLong_AsUnsignedLong(value); break;
@@ -333,13 +334,87 @@ static PyObject* setitem_index(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
+static PyObject* setitem_slice(PyObject* self, PyObject* args){
+  PyObject *capsule, *values;
+  Py_ssize_t length, start, stop, step;
+  const char* fmt;
+
+  if(!PyArg_ParseTuple(args, "OOnnnns", &capsule, &values, &length, &start, &stop, &step, &fmt)) return NULL;
+
+  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
+  if(!buffer){
+    PyErr_SetString(PyExc_ValueError, "Invalid memory capsule");
+    return NULL;
+  }
+
+  Py_ssize_t sliced_len = (stop - start + step - (step > 0 ? 1 : -1)) / step;
+  if(sliced_len <= 0) sliced_len = 0;
+
+  if(!PyList_Check(values)){
+    PyErr_SetString(PyExc_TypeError, "Slice values must be a list");
+    return NULL;
+  }
+
+  if(PyList_Size(values) != sliced_len){
+    PyErr_SetString(PyExc_ValueError, "Slice values length does not match slice");
+    return NULL;
+  }
+
+  size_t item_size = get_type_size(fmt);
+  if(item_size == 0){
+    PyErr_SetString(PyExc_TypeError, "Unsupported data type");
+    return NULL;
+  }
+  
+  for(Py_ssize_t i = 0; i < sliced_len; i++){
+    PyObject* value = PyList_GetItem(values, i);
+    Py_ssize_t index = start + i * step;
+
+    switch (*fmt){
+      case '?': ((bool*)buffer)[index] = PyObject_IsTrue(value); break;
+      case 'b': ((char*)buffer)[index] = (char)PyLong_AsLong(value); break;
+      case 'B': ((unsigned char*)buffer)[index] = (unsigned char)PyLong_AsUnsignedLong(value); break;
+      case 'h': ((short*)buffer)[index] = (short)PyLong_AsLong(value); break;
+      case 'H': ((unsigned short*)buffer)[index] = (unsigned short)PyLong_AsUnsignedLong(value); break;
+      case 'i': ((int*)buffer)[index] = (int)PyLong_AsLong(value); break;
+      case 'I': ((unsigned int*)buffer)[index] = (unsigned int)PyLong_AsUnsignedLong(value); break;
+      case 'l': ((long*)buffer)[index] = (long)PyLong_AsLong(value); break;
+      case 'L': ((unsigned long*)buffer)[index] = (unsigned long)PyLong_AsUnsignedLong(value); break;
+      case 'q': ((long long*)buffer)[index] = (long long)PyLong_AsLongLong(value); break;
+      case 'Q': ((unsigned long long*)buffer)[index] = (unsigned long long)PyLong_AsUnsignedLongLong(value); break;
+      case 'f': ((float*)buffer)[index] = (float)PyFloat_AsDouble(value); break;
+      case 'd': ((double*)buffer)[index] = PyFloat_AsDouble(value); break;
+      case 'g': ((long double*)buffer)[index] = (long double)PyFloat_AsDouble(value); break;
+      case 'F': {
+                  Py_complex cmpx = PyComplex_AsCComplex(value);
+                  ((float complex*)buffer)[index] = (float)cmpx.real + (float)cmpx.imag * I;
+                } break;
+      case 'D': {
+                  Py_complex cmpx = PyComplex_AsCComplex(value);
+                  ((double complex*)buffer)[index] = (double)cmpx.real + (double)cmpx.imag * I;
+                } break;
+      case 'G': {
+                  Py_complex cmpx = PyComplex_AsCComplex(value);
+                  ((long double complex*)buffer)[index] = (long double)cmpx.real + (long double)cmpx.imag * I;
+                } break;
+      default:
+        PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
+        return NULL;
+    }
+
+    if(PyErr_Occurred()) return NULL;
+  }
+  Py_RETURN_NONE;
+}
+
+
 static PyMethodDef methods[] = {
   {"array", array, METH_VARARGS, "allocate the memory for a list and return a capsule"},
   {"toList", toList, METH_VARARGS, "from pycapsule to python list"},
   {"getitem_index", getitem_index, METH_VARARGS, "get item through index"},
   {"getitem_slice", getitem_slice, METH_VARARGS, "get item through slice"},
   {"setitem_index", setitem_index, METH_VARARGS, "set item through index"},
-  {"astype", c_astype, METH_VARARGS, "type conversion"},
+  {"setitem_slice", setitem_slice, METH_VARARGS, "set item through slice"},
   {NULL, NULL, 0, NULL}
 };
 
