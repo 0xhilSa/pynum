@@ -60,7 +60,6 @@ class Vector:
   def cpu(self):
     if self.__device == "cuda": return Vector(self.list_(), self.__dtype, device="cpu")
     return self
-  def astype(self, dtype:DType): return host.astype(self.__pointer, self.__length, self.__dtype.get_fmt())
   def __getitem__(self, index:Union[int,slice]):
     if isinstance(index,int):
       if self.__device == "cuda": res = pycu.toHost(pycu.getitem_index(self.__pointer, index, self.__dtype.get_fmt()), 1, self.__dtype.get_fmt())
@@ -84,13 +83,10 @@ class Vector:
       value = Vector.__from_custom2builtin(self.__dtype)(value)
       if self.__device == "cpu": host.setitem_index(self.__pointer, value, self.__length, index, self.__dtype.get_fmt())
       elif self.__device == "cuda": pycu.setitem_index(self.__pointer, value, self.__length, index, self.__dtype.get_fmt())
-    elif isinstance(index, slice): raise NotImplementedError
-
-
-
-
-
-
-
-
-
+    elif isinstance(index, slice):
+      start, stop, step = index.start, index.stop, index.step
+      if step is None: step = 1
+      dtype = Vector.__from_custom2builtin(self.__dtype)
+      for index, element in enumerate(value): value[index] = dtype(element)
+      if self.__device == "cpu": host.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
+      elif self.__device == "cuda": pycu.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
