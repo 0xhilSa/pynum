@@ -29,7 +29,7 @@
 - Implement an LLVM-based accelerator for CPU execution
 
 > [!IMPORTANT]
-> Arithmetic operations on vectors can only be performed if they have the same data type
+> Arithmetic ops on vectors can only be performed if they have the same data type
 > - (short - short) ✔️
 > - (short - int) ❌
 
