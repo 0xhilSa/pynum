@@ -1,4 +1,8 @@
 #include <python3.10/Python.h>
+#include <python3.10/complexobject.h>
+#include <python3.10/floatobject.h>
+#include <python3.10/listobject.h>
+#include <python3.10/longobject.h>
 #include <python3.10/methodobject.h>
 #include <python3.10/modsupport.h>
 #include <python3.10/object.h>
@@ -118,7 +122,6 @@ static PyObject* array(PyObject* self, PyObject* args){
   for(Py_ssize_t i = 0; i < size; i++){
     PyObject* item = PyList_GetItem(py_array, i);
     if(!item){
-      free(buffer);
       return NULL;
     }
     switch(*fmt){
@@ -149,13 +152,13 @@ static PyObject* array(PyObject* self, PyObject* args){
                   ((long double complex*)buffer)[i] = (long double)cmpx.real + (long double)cmpx.imag * I;
                 }break;
       default: {
-                  free(buffer);
                   PyErr_Format(PyExc_TypeError, "Invalid DType: '%s'", fmt);
                   return NULL;
                }
     }
     if(PyErr_Occurred()){
-      free(buffer);
+      printf("An Error Occurred at `array` func in host.c\n");
+      fflush(stdout);
       return NULL;
     }
   }
@@ -167,20 +170,6 @@ static PyObject* array(PyObject* self, PyObject* args){
   return capsule;
 }
 
-//static PyObject* c_astype(PyObject* self, PyObject* args){
-//  PyObject* capsule;
-//  Py_ssize_t length;
-//  const char *src_fmt, dst_fmt;
-//  if(!PyArg_ParseTuple(args, "Onss", &capsule, &length, &src_fmt, &dst_fmt)) return NULL;
-//
-//  void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
-//  if(!buffer){
-//    PyErr_SetString(PyExc_ValueError,"Invalid memory capsule");
-//    return NULL;
-//  }
-//
-//}
-
 static PyObject* getitem_index(PyObject* self, PyObject* args){
   PyObject* capsule;
   Py_ssize_t length, index;
@@ -190,6 +179,11 @@ static PyObject* getitem_index(PyObject* self, PyObject* args){
   void* buffer = PyCapsule_GetPointer(capsule, "host_memory");
   if(!buffer){
     PyErr_SetString(PyExc_ValueError, "Invalid memory capsule");
+    return NULL;
+  }
+
+  if(!PyList_Check(buffer)){
+    PyErr_SetString(PyExc_TypeError, "Expected a python list");
     return NULL;
   }
 
@@ -330,7 +324,11 @@ static PyObject* setitem_index(PyObject* self, PyObject* args){
       return NULL;
   }
 
-  if(PyErr_Occurred()) return NULL;
+  if(PyErr_Occurred()){
+    printf("An Error Occurred at `setitem_index` func in host.c\n");
+    fflush(stdout);
+    return NULL;
+  }
   Py_RETURN_NONE;
 }
 
@@ -402,11 +400,14 @@ static PyObject* setitem_slice(PyObject* self, PyObject* args){
         return NULL;
     }
 
-    if(PyErr_Occurred()) return NULL;
+    if(PyErr_Occurred()){
+      printf("An Error Occurred at `setitem_slice` func in host.c\n");
+      fflush(stdout);
+      return NULL;
+    }
   }
   Py_RETURN_NONE;
 }
-
 
 static PyMethodDef methods[] = {
   {"array", array, METH_VARARGS, "allocate the memory for a list and return a capsule"},
