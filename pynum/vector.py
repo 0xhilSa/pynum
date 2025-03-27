@@ -39,6 +39,8 @@ class Vector:
   def __repr__(self): return f"<Vector(length={self.__length}, dtype='{self.__dtype.get_name()}', device='{self.__device}', const={self.__const})>"
   def __len__(self): return self.__length
   @property
+  def ptr(self): return self.__pointer
+  @property
   def device(self): return self.__device
   @property
   def dtype(self): return self.__dtype
@@ -90,3 +92,12 @@ class Vector:
       for index, element in enumerate(value): value[index] = dtype(element)
       if self.__device == "cpu": host.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
       elif self.__device == "cuda": pycu.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
+  def __add__(self, other:Vector):
+    if self.__device == "cpu": return Vector(host.toList(host.add_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def __sub__(self, other:Vector): raise NotImplementedError
+  def __mul__(self, other:Vector): raise NotImplementedError
+  def __tdiv__(self, other:Vector): raise NotImplementedError
+  def __fdiv__(self, other:Vector): raise NotImplementedError
+  def __pow__(self, other:Vector): raise NotImplementedError
+  def __mod__(self, other:Vector): raise NotImplementedError
