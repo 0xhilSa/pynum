@@ -28,5 +28,10 @@
 - Introduction to Matrix dtype
 - Implement an LLVM-based accelerator for CPU execution
 
+> [!IMPORTANT]
+> The arithmetic ops on vectors can only be done when these vectors are of same dtype
+> - (short - short) ✔️
+> - (short - int) ❌
+
 ## 📜 LICENSE
 [MIT](./LICENSE)
