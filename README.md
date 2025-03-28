@@ -12,7 +12,7 @@
 
 ## ⚡ Installation
   ```bash
-  git clone "git@github.com:0xhilSa/pynum.git"
+  git clone "git@github.com:0xhilSa/pynum.git" ~/pynum
   cd pynum && rm -rf .git*
   bash install.sh -y
   ```
