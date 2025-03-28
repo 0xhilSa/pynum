@@ -96,9 +96,18 @@ class Vector:
     if self.__device == "cpu": return Vector(host.toList(host.add_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
     elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
-  def __sub__(self, other:Vector): raise NotImplementedError
-  def __mul__(self, other:Vector): raise NotImplementedError
-  def __tdiv__(self, other:Vector): raise NotImplementedError
-  def __fdiv__(self, other:Vector): raise NotImplementedError
+  def __sub__(self, other:Vector):
+    if self.__device == "cpu": return Vector(host.toList(host.sub_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def __mul__(self, other:Vector):
+    if self.__device == "cpu": return Vector(host.toList(host.mul_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def __truediv__(self, other:Vector):
+    if self.__device == "cpu": return Vector(host.toList(host.div_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def __floordiv__(self, other:Vector): raise NotImplementedError
   def __pow__(self, other:Vector): raise NotImplementedError
   def __mod__(self, other:Vector): raise NotImplementedError

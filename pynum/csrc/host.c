@@ -501,6 +501,314 @@ void add_vector_kernel(void* result, void* buff1, void* buff2, size_t length, co
   }
 }
 
+void sub_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)buff1;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "f") == 0){
+    float* x = (float*)buff1;
+    float* y = (float*)buff2;
+    float* z = (float*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "d") == 0){
+    double* x = (double*)buff1;
+    double* y = (double*)buff2;
+    double* z = (double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "g") == 0){
+    long double* x = (long double*)buff1;
+    long double* y = (long double*)buff2;
+    long double* z = (long double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "F") == 0){
+    float complex* x = (float complex*)buff1;
+    float complex* y = (float complex*)buff2;
+    float complex* z = (float complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "D") == 0){
+    double complex* x = (double complex*)buff1;
+    double complex* y = (double complex*)buff2;
+    double complex* z = (double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }else if(strcmp(fmt, "G") == 0){
+    long double complex* x = (long double complex*)buff1;
+    long double complex* y = (long double complex*)buff2;
+    long double complex* z = (long double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] - y[i]; }
+  }
+}
+
+void mul_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "?") == 0){
+    bool* x = (bool*)buff1;
+    bool* y = (bool*)buff2;
+    bool* z = (bool*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] =x[i] * y[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] =x[i] * y[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "f") == 0){
+    float* x = (float*)buff1;
+    float* y = (float*)buff2;
+    float* z = (float*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "d") == 0){
+    double* x = (double*)buff1;
+    double* y = (double*)buff2;
+    double* z = (double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "g") == 0){
+    long double* x = (long double*)buff1;
+    long double* y = (long double*)buff2;
+    long double* z = (long double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "F") == 0){
+    float complex* x = (float complex*)buff1;
+    float complex* y = (float complex*)buff2;
+    float complex* z = (float complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "D") == 0){
+    double complex* x = (double complex*)buff1;
+    double complex* y = (double complex*)buff2;
+    double complex* z = (double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }else if(strcmp(fmt, "G") == 0){
+    long double complex* x = (long double complex*)buff1;
+    long double complex* y = (long double complex*)buff2;
+    long double complex* z = (long double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] * y[i]; }
+  }
+  return;
+}
+
+bool div_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){
+        return false;
+      } z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "f") == 0){
+    float* x = (float*)buff1;
+    float* y = (float*)buff2;
+    float* z = (float*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "d") == 0){
+    double* x = (double*)buff1;
+    double* y = (double*)buff2;
+    double* z = (double*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "g") == 0){
+    long double* x = (long double*)buff1;
+    long double* y = (long double*)buff2;
+    long double* z = (long double*)result;
+    for(size_t i = 0; i < length; i++){
+      if(y[i] == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "F") == 0){
+    float complex* x = (float complex*)buff1;
+    float complex* y = (float complex*)buff2;
+    float complex* z = (float complex*)result;
+    for(size_t i = 0; i < length; i++){
+      if(cabsf(y[i]) == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "D") == 0){
+    double complex* x = (double complex*)buff1;
+    double complex* y = (double complex*)buff2;
+    double complex* z = (double complex*)result;
+    for(size_t i = 0; i < length; i++){
+      if(cabs(y[i]) == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }else if(strcmp(fmt, "G") == 0){
+    long double complex* x = (long double complex*)buff1;
+    long double complex* y = (long double complex*)buff2;
+    long double complex* z = (long double complex*)result;
+    for(size_t i = 0; i < length; i++){
+      if(cabsl(y[i]) == 0){ return false; }
+      z[i] = x[i] / y[i];
+    }
+  }
+  return true;
+}
+
 static PyObject* add_vector(PyObject* self, PyObject* args){
   PyObject *vec1, *vec2;
   Py_ssize_t length;
@@ -520,7 +828,7 @@ static PyObject* add_vector(PyObject* self, PyObject* args){
   }
 
   size_t size =  get_type_size(fmt1);
-  void* result = malloc(length * sizeof(size));
+  void* result = malloc(length * size);
   if(!result){
     PyErr_NoMemory();
     return NULL;
@@ -530,6 +838,109 @@ static PyObject* add_vector(PyObject* self, PyObject* args){
   return PyCapsule_New(result, "host_memory", free_memory);
 }
 
+static PyObject* sub_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
+    return NULL;
+  }
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size =  get_type_size(fmt1);
+  void* result = malloc(length * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "?") == 0){
+    free(result);
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
+    return NULL;
+  }
+  sub_vector_kernel(result, buff1, buff2, length, fmt1);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* mul_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
+    return NULL;
+  }
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size =  get_type_size(fmt1);
+  void* result = malloc(length * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  mul_vector_kernel(result, buff1, buff2, length, fmt1);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* div_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
+    return NULL;
+  }
+
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid  PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt1);
+  void* result = malloc(length * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "?") == 0){
+    free(result);
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
+    return NULL;
+  }
+
+  bool success = div_vector_kernel(result, buff1, buff2, length, fmt1);
+  if(!success){
+    free(result);
+    PyErr_SetString(PyExc_ZeroDivisionError, "Can't divide a number by ZERO");
+    return NULL;
+  }
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
 
 static PyMethodDef methods[] = {
   {"array", array, METH_VARARGS, "allocate the memory for a list and return a capsule"},
@@ -538,7 +949,10 @@ static PyMethodDef methods[] = {
   {"getitem_slice", getitem_slice, METH_VARARGS, "get item through slice"},
   {"setitem_index", setitem_index, METH_VARARGS, "set item through index"},
   {"setitem_slice", setitem_slice, METH_VARARGS, "set item through slice"},
-  {"add_vector", add_vector, METH_VARARGS, "add 2 vectors"},
+  {"add_vector", add_vector, METH_VARARGS, "addition 2 vectors"},
+  {"sub_vector", sub_vector, METH_VARARGS, "subtraction of 2 vectors"},
+  {"mul_vector", mul_vector, METH_VARARGS, "multiplication 2 vectors"},
+  {"div_vector", div_vector, METH_VARARGS, "division 2 vectors"},
   {NULL, NULL, 0, NULL}
 };
 
