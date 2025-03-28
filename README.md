@@ -20,7 +20,7 @@
 ## ✅ ToDo
 - [X] Implement the `__setitem__` method
 - [ ] Develop the `astype` method
-- [ ] To solve (core dumped) issue while adding 2 vectors of dtype complex128
+- [X] To solve (core dumped) issue while adding 2 vectors of dtype complex128
 - [ ] Add arithmetic and logical operations for the `Vector` class
 - [ ] Ensure compatibility with Windows OS
 
