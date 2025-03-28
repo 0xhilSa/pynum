@@ -94,6 +94,7 @@ class Vector:
       elif self.__device == "cuda": pycu.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
   def __add__(self, other:Vector):
     if self.__device == "cpu": return Vector(host.toList(host.add_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
   def __sub__(self, other:Vector): raise NotImplementedError
   def __mul__(self, other:Vector): raise NotImplementedError
