@@ -92,22 +92,79 @@ class Vector:
       for index, element in enumerate(value): value[index] = dtype(element)
       if self.__device == "cpu": host.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
       elif self.__device == "cuda": pycu.setitem_slice(self.__pointer, value, self.__length, start, stop, step, self.__dtype.get_fmt())
-  def __add__(self, other:Vector):
-    if self.__device == "cpu": return Vector(host.toList(host.add_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+  def bitwise_and(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.bitwise_and_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
     elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
-  def __sub__(self, other:Vector):
-    if self.__device == "cpu": return Vector(host.toList(host.sub_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+  def bitwise_or(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.bitwise_or_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
     elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
-  def __mul__(self, other:Vector):
-    if self.__device == "cpu": return Vector(host.toList(host.mul_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+  def bitwise_not(self):
+    if self.__device == "cpu": return Vector(host.toList(host.bitwise_not_vector(self.__pointer, self.__length, self.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise RuntimeError(f"Invalid Device Provided")
+  def bitwise_xor(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.bitwise_xor_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
     elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
-  def __truediv__(self, other:Vector):
-    if self.__device == "cpu": return Vector(host.toList(host.div_vector(self.__pointer, other.__pointer, self.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+  def bitwise_nand(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return self.bitwise_and(other).bitwise_not()
     elif self.__device == "cuda": raise NotImplementedError
     raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
-  def __floordiv__(self, other:Vector): raise NotImplementedError
-  def __pow__(self, other:Vector): raise NotImplementedError
-  def __mod__(self, other:Vector): raise NotImplementedError
+  def bitwise_nor(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return self.bitwise_or(other).bitwise_not()
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def bitwise_xnor(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return self.bitwise_xor(other).bitwise_not()
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def add(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.add_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def sub(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.sub_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def mul(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.mul_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def tdiv(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.div_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def pow(self, other:Vector, reverse:bool=False):
+    if reverse: self, other = other, self
+    if self.__device == "cpu": return Vector(host.toList(host.pow_vector(self.__pointer, other.__pointer, self.__length, other.__length, self.__dtype.get_fmt(), other.__dtype.get_fmt()), self.__length, self.__dtype.get_fmt()), self.__dtype)
+    elif self.__device == "cuda": raise NotImplementedError
+    raise TypeError(f"Invalid dtype provided: {type(other).__name__}")
+  def __add__(self, other:Vector): return self.add(other)
+  def __sub__(self, other:Vector): return self.sub(other)
+  def __mul__(self, other:Vector): return self.mul(other)
+  def __truediv__(self, other:Vector): return self.tdiv(other)
+  def __pow__(self, other:Vector): return self.pow(other)
+  def __radd__(self, other:Vector): return self.add(other, True)
+  def __rsub__(self, other:Vector): return self.sub(other, True)
+  def __rmul__(self, other:Vector): return self.mul(other, True)
+  def __rtruediv__(self, other:Vector): return self.tdiv(other, True)
+  def __rpow__(self, other:Vector): return self.pow(other, True)
+  def __and__(self, other:Vector): return self.bitwise_and(other, False)
+  def __or__(self, other:Vector): return self.bitwise_or(other, False)
+  def __invert__(self): return self.bitwise_not()
+  def __xor__(self, other:Vector): return self.bitwise_xor(other, False)
+  def __rand__(self, other:Vector): return self.bitwise_and(other, True)
+  def __ror__(self, other:Vector): return self.bitwise_or(other, True)
+  def __rxor__(self, other:Vector): return self.bitwise_xor(other, True)

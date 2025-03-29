@@ -1,15 +1,4 @@
 #include <python3.10/Python.h>
-#include <python3.10/abstract.h>
-#include <python3.10/complexobject.h>
-#include <python3.10/floatobject.h>
-#include <python3.10/listobject.h>
-#include <python3.10/longobject.h>
-#include <python3.10/methodobject.h>
-#include <python3.10/modsupport.h>
-#include <python3.10/object.h>
-#include <python3.10/pycapsule.h>
-#include <python3.10/pyerrors.h>
-#include <python3.10/pyport.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -410,8 +399,6 @@ static PyObject* setitem_slice(PyObject* self, PyObject* args){
   Py_RETURN_NONE;
 }
 
-
-
 void add_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
   if(strcmp(fmt, "?") == 0){
     bool* x = (bool*)buff1;
@@ -809,12 +796,326 @@ bool div_vector_kernel(void* result, void* buff1, void* buff2, size_t length, co
   return true;
 }
 
+void pow_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "f") == 0){
+    float* x = (float*)buff1;
+    float* y = (float*)buff2;
+    float* z = (float*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "d") == 0){
+    double* x = (double*)buff1;
+    double* y = (double*)buff2;
+    double* z = (double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "g") == 0){
+    long double* x = (long double*)buff1;
+    long double* y = (long double*)buff2;
+    long double* z = (long double*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = pow(x[i], y[i]); }
+  }else if(strcmp(fmt, "F") == 0){
+    float complex* x = (float complex*)buff1;
+    float complex* y = (float complex*)buff2;
+    float complex* z = (float complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = cpow(x[i], y[i]); }
+  }else if(strcmp(fmt, "D") == 0){
+    double complex* x = (double complex*)buff1;
+    double complex* y = (double complex*)buff2;
+    double complex* z = (double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = cpow(x[i], y[i]); }
+  }else if(strcmp(fmt, "G") == 0){
+    long double complex* x = (long double complex*)buff1;
+    long double complex* y = (long double complex*)buff2;
+    long double complex* z = (long double complex*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = cpow(x[i], y[i]); }
+  }
+}
+
+void bitwise_and_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "?") == 0){
+    bool* x = (bool*)buff1;
+    bool* y = (bool*)buff2;
+    bool* z = (bool*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length;  i++){ z[i] = x[i] & y[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] & y[i]; }
+  }
+}
+
+void bitwise_or_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "?") == 0){
+    bool* x = (bool*)buff1;
+    bool* y = (bool*)buff2;
+    bool* z = (bool*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] | y[i]; }
+  }
+}
+
+void bitwise_not_vector_kernel(void* result, void* buff, size_t length, const char* fmt){
+  if(strcmp(fmt, "?") == 0){
+    bool* x = (bool*)buff;
+    bool* z = (bool*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff;
+    unsigned long* z= (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = !x[i]; }
+  }
+}
+
+void bitwise_xor_vector_kernel(void* result, void* buff1, void* buff2, size_t length, const char* fmt){
+  if(strcmp(fmt, "?") == 0){
+    bool* x = (bool*)buff1;
+    bool* y = (bool*)buff2;
+    bool* z = (bool*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "b") == 0){
+    char* x = (char*)buff1;
+    char* y = (char*)buff2;
+    char* z = (char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "B") == 0){
+    unsigned char* x = (unsigned char*)buff1;
+    unsigned char* y = (unsigned char*)buff2;
+    unsigned char* z = (unsigned char*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "h") == 0){
+    short* x = (short*)buff1;
+    short* y = (short*)buff2;
+    short* z = (short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "H") == 0){
+    unsigned short* x = (unsigned short*)buff1;
+    unsigned short* y = (unsigned short*)buff2;
+    unsigned short* z = (unsigned short*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "i") == 0){
+    int* x = (int*)buff1;
+    int* y = (int*)buff2;
+    int* z = (int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "I") == 0){
+    unsigned int* x = (unsigned int*)buff1;
+    unsigned int* y = (unsigned int*)buff2;
+    unsigned int* z = (unsigned int*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "l") == 0){
+    long* x = (long*)buff1;
+    long* y = (long*)buff2;
+    long* z = (long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "L") == 0){
+    unsigned long* x = (unsigned long*)buff1;
+    unsigned long* y = (unsigned long*)buff2;
+    unsigned long* z = (unsigned long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "q") == 0){
+    long long* x = (long long*)buff1;
+    long long* y = (long long*)buff2;
+    long long* z = (long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }else if(strcmp(fmt, "Q") == 0){
+    unsigned long long* x = (unsigned long long*)buff1;
+    unsigned long long* y = (unsigned long long*)buff2;
+    unsigned long long* z = (unsigned long long*)result;
+    for(size_t i = 0; i < length; i++){ z[i] = x[i] ^ y[i]; }
+  }
+}
+
 static PyObject* add_vector(PyObject* self, PyObject* args){
   PyObject *vec1, *vec2;
-  Py_ssize_t length;
+  Py_ssize_t length1, length2;
   const char *fmt1, *fmt2;
 
-  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
 
   if(strcmp(fmt1, fmt2) != 0){
     PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
@@ -828,22 +1129,32 @@ static PyObject* add_vector(PyObject* self, PyObject* args){
   }
 
   size_t size =  get_type_size(fmt1);
-  void* result = malloc(length * size);
+  void* result = malloc(length1 * size);
   if(!result){
     PyErr_NoMemory();
     return NULL;
   }
 
-  add_vector_kernel(result, buff1, buff2, length, fmt1);
+  add_vector_kernel(result, buff1, buff2, length1, fmt1);
   return PyCapsule_New(result, "host_memory", free_memory);
 }
 
 static PyObject* sub_vector(PyObject* self, PyObject* args){
   PyObject *vec1, *vec2;
-  Py_ssize_t length;
+  Py_ssize_t length1, length2;
   const char *fmt1, *fmt2;
 
-  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "?") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
+    return NULL;
+  }
 
   if(strcmp(fmt1, fmt2) != 0){
     PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
@@ -857,27 +1168,27 @@ static PyObject* sub_vector(PyObject* self, PyObject* args){
   }
 
   size_t size =  get_type_size(fmt1);
-  void* result = malloc(length * size);
+  void* result = malloc(length1 * size);
   if(!result){
     PyErr_NoMemory();
     return NULL;
   }
 
-  if(strcmp(fmt1, "?") == 0){
-    free(result);
-    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
-    return NULL;
-  }
-  sub_vector_kernel(result, buff1, buff2, length, fmt1);
+  sub_vector_kernel(result, buff1, buff2, length1, fmt1);
   return PyCapsule_New(result, "host_memory", free_memory);
 }
 
 static PyObject* mul_vector(PyObject* self, PyObject* args){
   PyObject *vec1, *vec2;
-  Py_ssize_t length;
+  Py_ssize_t length1, length2;
   const char *fmt1, *fmt2;
 
-  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
 
   if(strcmp(fmt1, fmt2) != 0){
     PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
@@ -891,22 +1202,32 @@ static PyObject* mul_vector(PyObject* self, PyObject* args){
   }
 
   size_t size =  get_type_size(fmt1);
-  void* result = malloc(length * size);
+  void* result = malloc(length1 * size);
   if(!result){
     PyErr_NoMemory();
     return NULL;
   }
 
-  mul_vector_kernel(result, buff1, buff2, length, fmt1);
+  mul_vector_kernel(result, buff1, buff2, length1, fmt1);
   return PyCapsule_New(result, "host_memory", free_memory);
 }
 
 static PyObject* div_vector(PyObject* self, PyObject* args){
   PyObject *vec1, *vec2;
-  Py_ssize_t length;
+  Py_ssize_t length1, length2;
   const char *fmt1, *fmt2;
 
-  if(!PyArg_ParseTuple(args, "OOnss", &vec1, &vec2, &length, &fmt1, &fmt2)) return NULL;
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "?") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
+    return NULL;
+  }
 
   if(strcmp(fmt1, fmt2) != 0){
     PyErr_SetString(PyExc_TypeError, "DType of vectors must be the same");
@@ -921,24 +1242,207 @@ static PyObject* div_vector(PyObject* self, PyObject* args){
   }
 
   size_t size = get_type_size(fmt1);
+  void* result = malloc(length1 * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  bool success = div_vector_kernel(result, buff1, buff2, length1, fmt1);
+  if(!success){
+    free(result);
+    PyErr_SetString(PyExc_ZeroDivisionError, "Can't divide a number by ZERO");
+    return NULL;
+  }
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* pow_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length1, length2;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "?") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform power operation on vector having boolean dtype");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_RuntimeError, "DType of vectors must be the same");
+    return NULL;
+  }
+
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt1);
+  void* result = malloc(length1 * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  pow_vector_kernel(result, buff1, buff2, length1, fmt1);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* bitwise_and_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length1, length2;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_RuntimeError, "DType of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "f") == 0 || strcmp(fmt1, "d") == 0 || strcmp(fmt1, "g") == 0 || strcmp(fmt1, "F") == 0 || strcmp(fmt1, "D") == 0 || strcmp(fmt1, "G") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform bitwise ops on float, double and complex dtypes");
+    return NULL;
+  }
+
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt1);
+  void* result = malloc(length1 * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  bitwise_and_vector_kernel(result, buff1, buff2, length1, fmt1);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* bitwise_or_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length1, length2;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_RuntimeError, "DType of vectors must be the same");
+    return NULL;
+  }
+
+  if(strcmp(fmt1, "f") == 0 || strcmp(fmt1, "d") == 0 || strcmp(fmt1, "g") == 0 || strcmp(fmt1, "F") == 0 || strcmp(fmt1, "D") == 0 || strcmp(fmt1, "G") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform bitwise ops on float, double and complex dtypes");
+    return NULL;
+  }
+
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt1);
+  void* result = malloc(length1 * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  bitwise_or_vector_kernel(result, buff1, buff2, length1, fmt1);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* bitwise_not_vector(PyObject* self, PyObject* args){
+  PyObject* vec;
+  Py_ssize_t length;
+  const char* fmt;
+
+  if(!PyArg_ParseTuple(args, "Ons", &vec, &length, &fmt)) return NULL;
+
+  if(strcmp(fmt, "f") == 0 || strcmp(fmt, "d") == 0 || strcmp(fmt, "g") == 0 || strcmp(fmt, "F") == 0 || strcmp(fmt, "D") == 0 || strcmp(fmt, "G") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform bitwise ops on float, double and complex dtypes");
+    return NULL;
+  }
+
+  void* buff = PyCapsule_GetPointer(vec, "host_memory");
+  if(!buff){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt);
   void* result = malloc(length * size);
   if(!result){
     PyErr_NoMemory();
     return NULL;
   }
 
-  if(strcmp(fmt1, "?") == 0){
-    free(result);
-    PyErr_SetString(PyExc_RuntimeError, "Can't perform subtract operation on vector having boolean dtype");
+  bitwise_not_vector_kernel(result, buff, length, fmt);
+  return PyCapsule_New(result, "host_memory", free_memory);
+}
+
+static PyObject* bitwise_xor_vector(PyObject* self, PyObject* args){
+  PyObject *vec1, *vec2;
+  Py_ssize_t length1, length2;
+  const char *fmt1, *fmt2;
+
+  if(!PyArg_ParseTuple(args, "OOnnss", &vec1, &vec2, &length1, &length2, &fmt1, &fmt2)) return NULL;
+
+  if(length1 != length2){
+    PyErr_SetString(PyExc_RuntimeError, "Length of vectors must be the same");
     return NULL;
   }
 
-  bool success = div_vector_kernel(result, buff1, buff2, length, fmt1);
-  if(!success){
-    free(result);
-    PyErr_SetString(PyExc_ZeroDivisionError, "Can't divide a number by ZERO");
+  if(strcmp(fmt1, fmt2) != 0){
+    PyErr_SetString(PyExc_RuntimeError, "DType of vectors must be the same");
     return NULL;
   }
+
+  if(strcmp(fmt1, "f") == 0 || strcmp(fmt1, "d") == 0 || strcmp(fmt1, "g") == 0 || strcmp(fmt1, "F") == 0 || strcmp(fmt1, "D") == 0 || strcmp(fmt1, "G") == 0){
+    PyErr_SetString(PyExc_RuntimeError, "Can't perform bitwise ops on float, double and complex dtypes");
+    return NULL;
+  }
+
+  void* buff1 = PyCapsule_GetPointer(vec1, "host_memory");
+  void* buff2 = PyCapsule_GetPointer(vec2, "host_memory");
+  if(!buff1 || !buff2){
+    PyErr_SetString(PyExc_RuntimeError, "Invalid PyCapsule: NULL pointer");
+    return NULL;
+  }
+
+  size_t size = get_type_size(fmt1);
+  void* result = malloc(length1 * size);
+  if(!result){
+    PyErr_NoMemory();
+    return NULL;
+  }
+
+  bitwise_xor_vector_kernel(result, buff1, buff2, length1, fmt1);
   return PyCapsule_New(result, "host_memory", free_memory);
 }
 
@@ -951,8 +1455,13 @@ static PyMethodDef methods[] = {
   {"setitem_slice", setitem_slice, METH_VARARGS, "set item through slice"},
   {"add_vector", add_vector, METH_VARARGS, "addition 2 vectors"},
   {"sub_vector", sub_vector, METH_VARARGS, "subtraction of 2 vectors"},
-  {"mul_vector", mul_vector, METH_VARARGS, "multiplication 2 vectors"},
-  {"div_vector", div_vector, METH_VARARGS, "division 2 vectors"},
+  {"mul_vector", mul_vector, METH_VARARGS, "multiplication of 2 vectors"},
+  {"div_vector", div_vector, METH_VARARGS, "division of 2 vectors"},
+  {"pow_vector", pow_vector, METH_VARARGS, "expoential of 2 vectors"},
+  {"bitwise_and_vector", bitwise_and_vector, METH_VARARGS, "bitwise AND operation on 2 vectors"},
+  {"bitwise_or_vector", bitwise_or_vector, METH_VARARGS, "bitwise OR operation on 2 vectors"},
+  {"bitwise_not_vector", bitwise_not_vector, METH_VARARGS, "bitwise NOT operation on a vector"},
+  {"bitwise_xor_vector", bitwise_xor_vector, METH_VARARGS, "bitwise XOR operation on 2 vectors"},
   {NULL, NULL, 0, NULL}
 };
 
